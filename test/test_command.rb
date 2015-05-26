@@ -1,11 +1,46 @@
 require 'minitest/autorun'
 require 'yaml'
 
-require 'termdump/command'
+require 'termdump'
 
 class TestCommand < MiniTest::Test
   def setup
     @comm = TermDump::Command.new([])
+  end
+
+  def get_parsed_args args
+    TermDump::Command.new(args.split).instance_variable_get(:@args)
+  end
+
+  def test_args
+    # list all sessions
+    args = get_parsed_args "termdump -l"
+    assert_equal true, args.list
+    # delete one session
+    args = get_parsed_args "termdump -d ruby"
+    assert_equal :delete, args.action
+    assert_equal 'ruby', args.session
+    # list all sessions and delete one
+    args = get_parsed_args "termdump -d"
+    assert_equal :delete, args.action
+    assert_equal true, args.list
+    # load one session
+    args = get_parsed_args "termdump ruby"
+    assert_equal :load, args.action
+    assert_equal 'ruby', args.session
+    # edit one session
+    args = get_parsed_args "termdump -e ruby"
+    assert_equal :edit, args.action
+    assert_equal 'ruby', args.session
+    # dump to a session
+    args = get_parsed_args "termdump -s"
+    assert_equal :save, args.action
+    assert_equal '', args.session
+    args = get_parsed_args "TermDump -s ruby"
+    assert_equal 'ruby', args.session
+    # print result to stdout(works with -s)
+    args = get_parsed_args "termdump -s ruby -o"
+    assert_equal true, args.stdout
   end
 
   def test_path
