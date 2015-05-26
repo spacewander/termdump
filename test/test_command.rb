@@ -18,6 +18,7 @@ class TestCommand < MiniTest::Test
     assert_equal true, args.list
     # delete one session
     args = get_parsed_args "termdump -d ruby"
+    assert false, args.list
     assert_equal :delete, args.action
     assert_equal 'ruby', args.session
     # list all sessions and delete one

@@ -26,7 +26,7 @@ module TermDump
 
   class Command
     def initialize args
-      @args = OpenStruct.new(:stdout => false, :action => :load, :list => false, 
+      @args = OpenStruct.new(:stdout => false, :action => :load, :list => false,
                              :session => '')
       OptionParser.new do |opts|
         opts.banner = "Usage: termdump [options] [session]"
@@ -44,15 +44,17 @@ module TermDump
         end
 
         opts.on_tail('-l', '--list', 'list all sessions') { @args.list = true }
-        opts.on_tail('-o', '--stdout', 'print dump result to stdout') { 
+        opts.on_tail('-o', '--stdout', 'print dump result to stdout') {
           @args.stdout = true }
         opts.on_tail('-v', '--version', 'print version') do
           puts VERSION
           exit 0
         end
         opts.parse! args
-        args.size > 1 ? @args.session = args[1] : @args.list = true
-        opts
+        # :load is the default action if no option given
+        if @args.action == :load 
+          args.size > 1 ? @args.session = args[1] : @args.list = true
+        end
       end
     end
 
@@ -109,9 +111,10 @@ module TermDump
       end
 
       paths = session_cwd.values
+      path_prefix = {}
       common_prefix = exact_commom_prefix(paths)
       if common_prefix != ''
-        path_prefix = {'$PROJECT' => common_prefix}
+        path_prefix['$PROJECT'] = common_prefix
         session_cwd.each_value do |path|
           path.sub!(common_prefix, '${PROJECT}') if path.start_with?(common_prefix)
         end
@@ -129,7 +132,8 @@ module TermDump
       if @args.stdout
         print_result ptree, path_prefix
       else
-        dump ptree, path_prefix
+        result = dump ptree, path_prefix
+        save_to_file @args.session, result
       end
     end
 
@@ -204,23 +208,89 @@ module TermDump
       yml_tree.to_yaml
     end
 
-    @@session_dir = '~/.config/termdump/session'
+    @@session_dir = "#{Dir.home}/.config/termdump/session"
     # save yml format string to a yml file in @@session_dir
-    def save_to_file yml
-      FileUtils.mkpath(@@session_dir) unless File.exist?(@@session_dir)
+    def save_to_file session_name, result
+      begin
+        if session_name != ''
+          status = search_session session_name
+          overwrite = false
+          if status[:exist]
+            print "session #{session_name} already exists, overwrite?[Y/N]:"
+            answer = $stdin.gets.chomp
+            overwrite = true if answer == 'Y' || answer == 'y'
+          end
+          if !status[:exist] || overwrite
+            IO.write status[:name], result
+            puts "Save session '#{session_name}' successfully"
+            return
+          end
+        end
+        print "Enter a new session name:"
+        name = $stdin.gets.chomp
+        save_to_file name, result
+      rescue Errno::ENOENT
+        FileUtils.mkpath(@@session_dir) unless File.exist?(@@session_dir)
+        save_to_file session_name, result # reentry
+      end
     end
 
     def list
-      # TODO
+      begin
+        Dir.chdir(@@session_dir)
+        sessions = Dir.glob('*.yml')
+        if sessions.empty?
+          puts "No session exists in #{@@session_dir}"
+        else
+          puts "order:\tsession name\tctime\t\tatime"
+          sessions.each_with_index do |f, i|
+            cdate = File.ctime(f).to_date.strftime
+            adate = File.atime(f).to_date.strftime
+            f.sub!(/\.yml$/, '')
+            puts format("[%d]: %15s\t%s\t%s", i, f, cdate, adate)
+          end
+
+          get_input_order = proc do |action, &handler|
+            print "Select one session to #{action}:"
+            order = $stdin.gets.chomp
+            if order.to_i != 0 || order == '0' # can order be an integer?
+              order = order.to_i
+              if 0 <= order && order < sessions.size
+                handler.call sessions[order]
+                return
+              end
+            end
+            puts "Received a wrong session order"
+          end
+
+          case @args.action
+          when :load, :edit, :delete
+            get_input_order.call(@args.action) { |session| 
+              send("#{@args.action}_session", session) }
+          end
+        end
+      rescue Errno::ENOENT
+        FileUtils.mkpath(@@session_dir) unless File.exist?(@@session_dir)
+      end
     end
+
     def delete_session name
-      # TODO
+      status = search_session name
+      return puts "Session #{status[:name]} not found" unless status[:exist]
+      File.delete status[:name]
+      puts "Delete session '#{name}' successfully"
     end
 
     def edit_session name
-      # TODO
+      FileUtils.mkpath(@@session_dir) unless File.exist?(@@session_dir)
+      status = search_session name
+      return puts "Session #{status[:name]} not found" unless status[:exist]
+      return puts "Set $EDITOR as your favourite editor to edit the session" unless ENV['EDITOR']
+      exec ENV['EDITOR'], status[:name]
     end
+
     def load_session name
+      puts name
       #ptree = load_file name
       #Session.new(ptree).replay
     end
