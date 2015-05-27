@@ -1,7 +1,7 @@
 require 'minitest/autorun'
 require 'yaml'
 
-require 'termdump'
+require 'termdump/command'
 
 class TestCommand < MiniTest::Test
   def setup
