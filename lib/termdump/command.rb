@@ -4,6 +4,7 @@ require 'optparse'
 require 'yaml'
 
 require 'termdump/version'
+require 'termdump/session'
 
 module TermDump
   class Process
@@ -52,8 +53,8 @@ module TermDump
         end
         opts.parse! args
         # :load is the default action if no option given
-        if @args.action == :load 
-          args.size > 1 ? @args.session = args[1] : @args.list = true
+        if @args.action == :load
+          args.size > 0 ? @args.session = args[0] : @args.list = true
         end
       end
     end
@@ -216,7 +217,7 @@ module TermDump
           status = search_session session_name
           overwrite = false
           if status[:exist]
-            print "session #{session_name} already exists, overwrite?[Y/N]:"
+            print "#{status[:name]} already exists, overwrite?[Y/N]:"
             answer = $stdin.gets.chomp
             overwrite = true if answer == 'Y' || answer == 'y'
           end
@@ -265,7 +266,7 @@ module TermDump
 
           case @args.action
           when :load, :edit, :delete
-            get_input_order.call(@args.action) { |session| 
+            get_input_order.call(@args.action) { |session|
               send("#{@args.action}_session", session) }
           end
         end
@@ -276,7 +277,7 @@ module TermDump
 
     def delete_session name
       status = search_session name
-      return puts "Session #{status[:name]} not found" unless status[:exist]
+      return puts "#{status[:name]} not found" unless status[:exist]
       File.delete status[:name]
       puts "Delete session '#{name}' successfully"
     end
@@ -284,20 +285,53 @@ module TermDump
     def edit_session name
       FileUtils.mkpath(@@session_dir) unless File.exist?(@@session_dir)
       status = search_session name
-      return puts "Session #{status[:name]} not found" unless status[:exist]
+      return puts "#{status[:name]} not found" unless status[:exist]
       return puts "Set $EDITOR as your favourite editor to edit the session" unless ENV['EDITOR']
       exec ENV['EDITOR'], status[:name]
     end
 
     def load_session name
-      puts name
-      #ptree = load_file name
-      #Session.new(ptree).replay
+      ptree = load_file name
+      if ptree != {}
+        ptree = parse_variables ptree
+        Session.new.replay(ptree)
+      end
     end
 
     # load the process tree from yml format string
-    def load_file
-      # TODO
+    def load_file name
+      status = search_session name
+      unless status[:exist]
+        puts "#{status[:name]} not found"
+        {}
+      else
+        YAML.load(IO.read(status[:name]))
+      end
+    end
+
+    def parse_variables ptree
+      # rewrite with tap for ruby > 1.9
+      variables = ptree.select {|k, v| k.start_with?('$')}
+      ptree.delete_if {|k, v| k.start_with?('$')}
+      var = Regexp.new(/(?<!\\) # don't trap in \$
+                       \$\{
+                        .*?[^\\] # parse the name until }(but not \})
+                       \}/mix).freeze
+      scan_tree = proc do |node|
+        node.each_pair do |k, v|
+          if k == 'cwd'
+            node[k].gsub!(var) do |match|
+              # match is sth like ${foo}
+              variables['$' + match[2...-1]]
+            end
+          elsif v.is_a?(Hash)
+            scan_tree.call v
+          end
+        end
+      end
+
+      ptree.each_pair {|k, v| scan_tree.call v if k.start_with?('window')}
+      ptree
     end
 
     # return a Hash with two symbols:
