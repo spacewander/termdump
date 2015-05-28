@@ -37,16 +37,16 @@ class TestSession < MiniTest::Test
     actions = [
       TermDump::Action.new(:window, 'window0'),
       TermDump::Action.new(:tab, 'tab0'),
-      TermDump::Action.new(:split, 'split0'),
-      TermDump::Action.new(:split, 'split1')
+      TermDump::Action.new(:vsplit, 'vsplit0'),
+      TermDump::Action.new(:vsplit, 'vsplit1')
     ]
     inject_action_queue actions
     @session.fallback
     expected = [
       TermDump::Action.new(:window, 'window0'),
       TermDump::Action.new(:tab, 'tab0'),
-      TermDump::Action.new(:tab, 'split0'),
-      TermDump::Action.new(:tab, 'split1')
+      TermDump::Action.new(:tab, 'vsplit0'),
+      TermDump::Action.new(:tab, 'vsplit1')
     ]
     assert_equal expected, @session.instance_variable_get(:@action_queue)
   end

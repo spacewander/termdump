@@ -74,19 +74,15 @@ class TestCommand < MiniTest::Test
     path_prefix = {'$HOME' => '~'}
     expected = { '$HOME' => '~',
       'window0' => {
+        'cwd' => '~/termdump',
+        'command' => 'vim',
         'tab0' => {
-          'cwd' => '~/termdump',
-          'command' => 'vim'
-        },
-        'tab1' => {
           'cwd' => '~/github'
         }
       },
       'window1' => {
-        'tab0' => {
-          'cwd' => '~/termdump',
-          'command' => 'pry'
-        }
+        'cwd' => '~/termdump',
+        'command' => 'pry'
       }
     }
     assert_equal expected, YAML.load(@comm.dump(ptree, path_prefix))
@@ -96,19 +92,19 @@ class TestCommand < MiniTest::Test
     ptree = { 
       '$HOME' => '~',
       'window0' => {
+        'cwd' => '~/${HOME}',
         'tab0' => {
           'cwd' => '${HOME}/termdump',
           'command' => 'vim'
-        },
-        'tab1' => {'cwd' => '~/${HOME}'}
+        }
       }
     }
     expected = {
       'window0' => {
+        'cwd' => '~/~',
         'tab0' => {
           'cwd' => '~/termdump', 'command' => 'vim'
-        },
-        'tab1' => {'cwd' => '~/~'}
+        }
       }
     }
     assert_equal expected, @comm.parse_variables(ptree)

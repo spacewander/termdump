@@ -10,9 +10,11 @@ module TermDump
       @support_split = Terminal.public_method_defined?(:vsplit) && 
         Terminal.public_method_defined?(:hsplit)
       @support_tab = Terminal.public_method_defined?(:tab)
+      @cwd = '~'
     end
 
     def replay task
+      p task
       scan task
       fallback
       exec
@@ -22,6 +24,8 @@ module TermDump
       node.each_pair do |k, v|
         if k == 'command'
           @action_queue.push(Action.new(:command, v))
+        elsif k == 'cwd'
+          @action_queue.push(Action.new(:cwd, v))
         elsif k.start_with?('tab')
           @action_queue.push(Action.new(:tab, k))
         elsif k.start_with?('vsplit')
@@ -54,9 +58,14 @@ module TermDump
       @action_queue.each do |action|
         case action.type
         when :command
-          terminal = @terminal.new_window
-        when :command
           terminal.exec action.content
+        when :cwd
+          if action.content != @cwd
+            terminal.exec "cd #{action.content}"
+            @cwd = action.content
+          end
+        when :window
+          terminal = @terminal.new_window
         when :tab
           terminal.tab action.content
         when :vsplit

@@ -25,6 +25,8 @@ module TermDump
     end
   end
 
+  class SessionSyntaxError < StandardError; end
+
   class Command
     def initialize args
       @args = OpenStruct.new(:stdout => false, :action => :load, :list => false,
@@ -179,9 +181,8 @@ module TermDump
     #   $0:xxx
     #   $1:...
     #   window0:
+    #     cwd:
     #     tab0:
-    #       cwd:
-    #     tab1:
     #       cwd:
     #       command:comand
     #   window1...
@@ -198,9 +199,14 @@ module TermDump
         order = 0
         tab_tree = {}
         session.each_value do |v|
-          tab_node = {'cwd' => v[0]}
-          tab_node["command"] = v[1].command if v.size > 1
-          tab_tree["tab#{order}"] = tab_node
+          if order == 0
+            tab_tree['cwd'] = v[0]
+            tab_tree["command"] = v[1].command if v.size > 1
+          else
+            tab_node = {'cwd' => v[0]}
+            tab_node["command"] = v[1].command if v.size > 1
+            tab_tree["tab#{order-1}"] = tab_node
+          end
           order += 1
         end
         yml_tree["window#{win_order}"] = tab_tree
@@ -293,6 +299,12 @@ module TermDump
     def load_session name
       ptree = load_file name
       if ptree != {}
+        begin
+          ptree.each_pair {|k, node| check node, k if k.start_with?("window")}
+        rescue SessionSyntaxError => e
+          puts "Parse session file error: #{e.message}"
+          exit 1
+        end
         ptree = parse_variables ptree
         Session.new.replay(ptree)
       end
@@ -309,6 +321,28 @@ module TermDump
       end
     end
 
+    # Raise SessionSyntaxError if their is syntax error in session file.
+    # Session file format:
+    #   $variables...
+    #   window0:
+    #     cwd:
+    #     command:
+    #     tab0:
+    #       cwd:
+    #       vsplit:
+    #       hsplit:
+    # Restriction:
+    #   1. There are only four types of node: :window, :tab, :vsplit and :hsplit
+    #   2. node level: :window > :tab > :vsplit, :hsplit
+    #   3. The root node should be :window
+    #   4. The root node should have a cwd attributes. 
+    #      If a node itself does not have cwd attributes, it inherits its parent's
+    #   5. Each node has only one 'cwd' and at most one 'command'
+    #   6. the type of 'cwd' and 'command' is String
+    def check node, node_name
+
+    end
+
     def parse_variables ptree
       # rewrite with tap for ruby > 1.9
       variables = ptree.select {|k, v| k.start_with?('$')}
@@ -322,7 +356,13 @@ module TermDump
           if k == 'cwd'
             node[k].gsub!(var) do |match|
               # match is sth like ${foo}
-              variables['$' + match[2...-1]]
+              name = match[2...-1]
+              value = variables['$' + name]
+              if value.nil?
+                print "Enter the value of '#{name}':"
+                value = $stdin.gets.chomp
+              end
+              value
             end
           elsif v.is_a?(Hash)
             scan_tree.call v
