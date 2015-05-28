@@ -300,12 +300,11 @@ module TermDump
       ptree = load_file name
       if ptree != {}
         begin
-          ptree.each_pair {|k, node| check node, k if k.start_with?("window")}
+          ptree = check ptree
         rescue SessionSyntaxError => e
           puts "Parse session file error: #{e.message}"
           exit 1
         end
-        ptree = parse_variables ptree
         Session.new.replay(ptree)
       end
     end
@@ -335,12 +334,84 @@ module TermDump
     #   1. There are only four types of node: :window, :tab, :vsplit and :hsplit
     #   2. node level: :window > :tab > :vsplit, :hsplit
     #   3. The root node should be :window
-    #   4. The root node should have a cwd attributes. 
+    #   4. The root node should have a cwd attributes.
     #      If a node itself does not have cwd attributes, it inherits its parent's
     #   5. Each node has only one 'cwd' and at most one 'command'
     #   6. the type of 'cwd' and 'command' is String
-    def check node, node_name
+    def check ptree
+      # (5) is ensured by yml syntax
+      parse_variables ptree
+      ptree.each_pair do |k, node|
+        check_node node, :window if k.start_with?("window")
+      end
+      ptree
+    end
 
+    def check_node node, node_type, parent_cwd=''
+      raise SessionSyntaxError.new("#{node_type} should be a node") unless node.is_a?(Hash)
+      if node.has_key?('cwd')
+        path = node['cwd']
+        raise SessionSyntaxError.new("can't cd to #{path}") unless check_cwd_cd_able path
+      else
+        raise SessionSyntaxError.new("'cwd' not found in #{node_type}") if parent_cwd == ''
+        node['cwd'] = parent_cwd
+      end
+      cwd = node['cwd']
+
+      case node_type
+      when :window
+        node.each_pair do |attr, value|
+          if attr == 'cwd' || attr == 'command'
+            check_attribute attr, value
+          elsif attr.start_with?('window')
+            check_node value, :window, cwd
+          elsif attr.start_with?('tab')
+            check_node value, :tab, cwd
+          elsif attr.start_with?('vsplit')
+            check_node value, :vsplit, cwd
+          elsif attr.start_with?('hsplit')
+            check_node value, :hsplit, cwd
+          else
+            node.delete attr
+          end
+        end
+      when :tab
+        node.each_pair do |attr, value|
+          if attr == 'cwd' || attr == 'command'
+            check_attribute attr, value
+          elsif attr.start_with?('tab')
+            check_node value, :tab, cwd
+          elsif attr.start_with?('vsplit')
+            check_node value, :vsplit, cwd
+          elsif attr.start_with?('hsplit')
+            check_node value, :hsplit, cwd
+          else
+            node.delete attr
+          end
+        end
+      when :vsplit, :hsplit
+        node.each_pair do |attr, value|
+          if attr == 'cwd' || attr == 'command'
+            check_attribute attr, value
+          elsif attr.start_with?('vsplit')
+            check_node value, :vsplit, cwd
+          elsif attr.start_with?('hsplit')
+            check_node value, :hsplit, cwd
+          else
+            node.delete attr
+          end
+        end
+      end
+    end
+
+    def check_attribute attr, value
+      unless value.is_a?(String)
+        raise SessionSyntaxError.new("'#{attr}' should be a String")
+      end
+    end
+
+    def check_cwd_cd_able path
+      true
     end
 
     def parse_variables ptree
@@ -371,7 +442,6 @@ module TermDump
       end
 
       ptree.each_pair {|k, v| scan_tree.call v if k.start_with?('window')}
-      ptree
     end
 
     # return a Hash with two symbols:

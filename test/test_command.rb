@@ -145,4 +145,37 @@ class TestCommand < MiniTest::Test
     }
     assert_equal expected, @comm.parse_variables(ptree)
   end
+
+  def test_check_node
+    node = {
+      'cwd' => '~',
+      'window0' => { 'cwd' => '~'},
+      'tab0' => {
+        'tab0' => {
+          'vsplit' => {
+            'hsplit' => {},
+            'cwd' => '~',
+            'tab0' => {}
+          },
+          'hsplit' => {}
+        }
+      }
+    }
+    expected =  {
+      'cwd' => '~',
+      "tab0" => {
+        'cwd' => '~',
+        "tab0" => {
+          "vsplit" => {
+            "hsplit" => {"cwd"=>"~"}, 
+            "cwd" => "~"
+          }, 
+          "hsplit" => {"cwd"=>"~"},
+          'cwd' => '~'
+        }
+      }
+    }
+    assert_equal expected, @comm.check_node(node, :tab)
+  end
+
 end
