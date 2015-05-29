@@ -101,9 +101,9 @@ class TestCommand < MiniTest::Test
     }
     expected = {
       'window0' => {
-        'cwd' => '~/~',
+        'cwd' => "#{Dir.home}/~",
         'tab0' => {
-          'cwd' => '~/termdump', 'command' => 'vim'
+          'cwd' => "#{Dir.home}/termdump", 'command' => 'vim'
         }
       }
     }
@@ -122,9 +122,9 @@ class TestCommand < MiniTest::Test
     }
     expected = {
       'window0' => {
-        'tab0' => { 'cwd' => '~/termdump/bin'},
-        'tab1' => { 'cwd' => '~/termdump/lib'},
-        'tab2' => { 'cwd' => '~/github' }
+        'tab0' => { 'cwd' => "#{Dir.home}/termdump/bin"},
+        'tab1' => { 'cwd' => "#{Dir.home}/termdump/lib"},
+        'tab2' => { 'cwd' => "#{Dir.home}/github" }
       }
     }
     assert_equal expected, @comm.parse_variables(ptree)
@@ -139,7 +139,7 @@ class TestCommand < MiniTest::Test
     }
     expected = {
       'window0' => {
-        'tab0' => { 'cwd' => '~/termdump/bin'},
+        'tab0' => { 'cwd' => "#{Dir.home}/termdump/bin"},
         'tab1' => { 'cwd' => '\${0}/lib'},
       }
     }
@@ -148,13 +148,13 @@ class TestCommand < MiniTest::Test
 
   def test_check_node
     node = {
-      'cwd' => '~',
-      'window0' => { 'cwd' => '~'},
+      'cwd' => Dir.home,
+      'window0' => { 'cwd' => Dir.home},
       'tab0' => {
         'tab0' => {
           'vsplit' => {
             'hsplit' => {},
-            'cwd' => '~',
+            'cwd' => Dir.home,
             'tab0' => {}
           },
           'hsplit' => {}
@@ -162,20 +162,79 @@ class TestCommand < MiniTest::Test
       }
     }
     expected =  {
-      'cwd' => '~',
+      'cwd' => Dir.home,
       "tab0" => {
-        'cwd' => '~',
+        'cwd' => Dir.home,
         "tab0" => {
           "vsplit" => {
-            "hsplit" => {"cwd"=>"~"}, 
-            "cwd" => "~"
+            "hsplit" => {"cwd"=>Dir.home}, 
+            "cwd" => Dir.home
           }, 
-          "hsplit" => {"cwd"=>"~"},
-          'cwd' => '~'
+          "hsplit" => {"cwd"=>Dir.home},
+          'cwd' => Dir.home
         }
       }
     }
     assert_equal expected, @comm.check_node(node, :tab)
+  end
+
+  def test_cwd_not_exists
+    node = {
+      'tab' => {'cwd' => '.'}
+    }
+    # 'cwd' not found in window
+    assert_raises TermDump::SessionSyntaxError do
+      @comm.check_node node, :window
+    end
+    # use parent's working directory
+    @comm.check_node node, :window, Dir.home
+    assert_equal Dir.home, node['cwd']
+  end
+
+  def test_can_not_cd_to
+    node = {'cwd' => Dir.home}
+    @comm.check_node node, :window
+    pwd = Dir.pwd
+    node = {'cwd' => pwd}
+    @comm.check_node node, :window
+    # can't cd to
+    assert_raises TermDump::SessionSyntaxError do
+      @comm.check_node({'cwd' => 'foo'}, :window, pwd)
+    end
+  end
+
+  def test_support_relative_path
+    node = {'cwd' => '.'}
+    pwd = Dir.pwd
+    @comm.check_node node, :window, pwd
+    assert_equal pwd, node['cwd']
+    node = {'cwd' => '.'}
+    # missing base working directory
+    assert_raises TermDump::SessionSyntaxError do
+      @comm.check_node node, :window
+    end
+  end
+
+  def test_node_should_be_hash
+    node = { 'tab' => 'cwd' }
+    # tab should be a node
+    assert_raises TermDump::SessionSyntaxError do
+      @comm.check_node node, :window
+    end
+  end
+
+  def test_cwd_should_be_string
+    node = {'cwd' => {}}
+    assert_raises TermDump::SessionSyntaxError do
+      @comm.check_node node, :window
+    end
+  end
+
+  def test_command_should_be_string
+    node = {'cwd' => Dir.home, 'command' => {}}
+    assert_raises TermDump::SessionSyntaxError do
+      @comm.check_node node, :window
+    end
   end
 
 end

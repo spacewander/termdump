@@ -1,6 +1,7 @@
 require 'fileutils'
 require 'ostruct'
 require 'optparse'
+require 'pathname'
 require 'yaml'
 
 require 'termdump/version'
@@ -348,22 +349,44 @@ module TermDump
     end
 
     def check_node node, node_type, parent_cwd=''
-      raise SessionSyntaxError.new("#{node_type} should be a node") unless node.is_a?(Hash)
+      unless node.is_a?(Hash)
+        raise SessionSyntaxError.new("#{node_type} should be a node") 
+      end
       if node.has_key?('cwd')
         path = node['cwd']
-        raise SessionSyntaxError.new("can't cd to #{path}") unless check_cwd_cd_able path
+        unless path.is_a?(String)
+          raise SessionSyntaxError.new("'cwd' should be a String")
+        end
+        unless Pathname.new(path).absolute?
+          if parent_cwd == ''
+            msg = "missing base working directory for relative path #{path}"
+            raise SessionSyntaxError.new(msg)
+          end
+          path = File.absolute_path(path, parent_cwd)
+          node['cwd'] = path
+        end
+        unless check_cwd_cd_able path
+          raise SessionSyntaxError.new("can't cd to #{path}") 
+        end
       else
-        raise SessionSyntaxError.new("'cwd' not found in #{node_type}") if parent_cwd == ''
+        if parent_cwd == ''
+          raise SessionSyntaxError.new("'cwd' not found in #{node_type}") 
+        end
         node['cwd'] = parent_cwd
       end
       cwd = node['cwd']
 
+      if node.has_key?('command')
+        unless node['command'].is_a?(String)
+          raise SessionSyntaxError.new("'command' should be a String")
+        end
+      end
+
+      remain_attributes = ['cwd', 'command']
       case node_type
       when :window
         node.each_pair do |attr, value|
-          if attr == 'cwd' || attr == 'command'
-            check_attribute attr, value
-          elsif attr.start_with?('window')
+          if attr.start_with?('window')
             check_node value, :window, cwd
           elsif attr.start_with?('tab')
             check_node value, :tab, cwd
@@ -371,47 +394,38 @@ module TermDump
             check_node value, :vsplit, cwd
           elsif attr.start_with?('hsplit')
             check_node value, :hsplit, cwd
-          else
+          elsif !remain_attributes.include?(attr)
             node.delete attr
           end
         end
       when :tab
         node.each_pair do |attr, value|
-          if attr == 'cwd' || attr == 'command'
-            check_attribute attr, value
-          elsif attr.start_with?('tab')
+          if attr.start_with?('tab')
             check_node value, :tab, cwd
           elsif attr.start_with?('vsplit')
             check_node value, :vsplit, cwd
           elsif attr.start_with?('hsplit')
             check_node value, :hsplit, cwd
-          else
+          elsif !remain_attributes.include?(attr)
             node.delete attr
           end
         end
       when :vsplit, :hsplit
         node.each_pair do |attr, value|
-          if attr == 'cwd' || attr == 'command'
-            check_attribute attr, value
-          elsif attr.start_with?('vsplit')
+          if attr.start_with?('vsplit')
             check_node value, :vsplit, cwd
           elsif attr.start_with?('hsplit')
             check_node value, :hsplit, cwd
-          else
+          elsif !remain_attributes.include?(attr)
             node.delete attr
           end
         end
       end
     end
 
-    def check_attribute attr, value
-      unless value.is_a?(String)
-        raise SessionSyntaxError.new("'#{attr}' should be a String")
-      end
-    end
-
+    # +path+ is absolute path
     def check_cwd_cd_able path
-      true
+      Dir.exist?(path) && File.readable?(path)
     end
 
     def parse_variables ptree
@@ -425,7 +439,8 @@ module TermDump
       scan_tree = proc do |node|
         node.each_pair do |k, v|
           if k == 'cwd'
-            node[k].gsub!(var) do |match|
+            cwd = node[k]
+            cwd.gsub!(var) do |match|
               # match is sth like ${foo}
               name = match[2...-1]
               value = variables['$' + name]
@@ -435,6 +450,7 @@ module TermDump
               end
               value
             end
+            cwd.sub!('~', Dir.home) if cwd == '~' || cwd.start_with?('~/')
           elsif v.is_a?(Hash)
             scan_tree.call v
           end
