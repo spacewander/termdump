@@ -7,47 +7,78 @@ class TestSession < MiniTest::Test
     @session = TermDump::Session.new
   end
 
-  def inject_action_queue actions
-    @session.instance_variable_set(:@action_queue, actions)
+  def inject_node_queue actions
+    @session.instance_variable_set(:@node_queue, actions)
+  end
+
+  def node_queue
+    @session.instance_variable_get(:@node_queue)
   end
 
   def test_fallback_not_support_tab
     @session.instance_variable_set(:@support_tab, false)
     @session.instance_variable_set(:@support_split, true)
     actions = [
-      TermDump::Action.new(:window, 'window0'),
-      TermDump::Action.new(:tab, 'tab0'),
-      TermDump::Action.new(:tab, 'tab1'),
-      TermDump::Action.new(:window, 'window1')
+      TermDump::Node.new(:window, ''),
+      TermDump::Node.new(:tab, ''),
+      TermDump::Node.new(:tab, ''),
+      TermDump::Node.new(:window, '')
     ]
-    inject_action_queue actions
+    inject_node_queue actions
     @session.fallback
     expected = [
-      TermDump::Action.new(:window, 'window0'),
-      TermDump::Action.new(:window, 'tab0'),
-      TermDump::Action.new(:window, 'tab1'),
-      TermDump::Action.new(:window, 'window1')
+      TermDump::Node.new(:window, ''),
+      TermDump::Node.new(:window, ''),
+      TermDump::Node.new(:window, ''),
+      TermDump::Node.new(:window, '')
     ]
-    assert_equal expected, @session.instance_variable_get(:@action_queue)
+    assert_equal expected, node_queue
   end
 
   def test_fallback_not_support_split
     @session.instance_variable_set(:@support_tab, true)
     @session.instance_variable_set(:@support_split, false)
     actions = [
-      TermDump::Action.new(:window, 'window0'),
-      TermDump::Action.new(:tab, 'tab0'),
-      TermDump::Action.new(:vsplit, 'vsplit0'),
-      TermDump::Action.new(:vsplit, 'vsplit1')
+      TermDump::Node.new(:window, ''),
+      TermDump::Node.new(:tab, ''),
+      TermDump::Node.new(:vsplit, ''),
+      TermDump::Node.new(:vsplit, '')
     ]
-    inject_action_queue actions
+    inject_node_queue actions
     @session.fallback
     expected = [
-      TermDump::Action.new(:window, 'window0'),
-      TermDump::Action.new(:tab, 'tab0'),
-      TermDump::Action.new(:tab, 'vsplit0'),
-      TermDump::Action.new(:tab, 'vsplit1')
+      TermDump::Node.new(:window, ''),
+      TermDump::Node.new(:tab, ''),
+      TermDump::Node.new(:tab, ''),
+      TermDump::Node.new(:tab, '')
     ]
-    assert_equal expected, @session.instance_variable_get(:@action_queue)
+    assert_equal expected, node_queue
+  end
+
+  def test_scan
+    node = {
+      'window' => {
+        'cwd' => 'home',
+        'tab' => {
+          'cwd' => 'some',
+          'command' => 'rm -rf /'
+        },
+        'vsplit' => {
+          'cwd' => 'any',
+          'command' => 'ls',
+          'hsplit' => {
+            'cwd' => 'else'
+          }
+        }
+      }
+    }
+    @session.scan node
+    expected = [
+      TermDump::Node.new(:window, 'home'),
+      TermDump::Node.new(:tab, 'some', 'rm -rf /'),
+      TermDump::Node.new(:vsplit, 'any', 'ls'),
+      TermDump::Node.new(:hsplit, 'else')
+    ]
+    assert_equal expected, node_queue
   end
 end

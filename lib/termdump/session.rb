@@ -1,39 +1,37 @@
 require 'termdump/terminal'
 
 module TermDump
-  Action = Struct.new(:type, :content)
+  Node = Struct.new(:type, :cwd, :command)
 
   class Session
     def initialize terminal_type = nil
       @terminal = Terminal.new
-      @action_queue = []
+      @node_queue = []
       @support_split = Terminal.public_method_defined?(:vsplit) && 
         Terminal.public_method_defined?(:hsplit)
       @support_tab = Terminal.public_method_defined?(:tab)
-      @cwd = '~'
     end
 
     def replay task
-      p task
       scan task
       fallback
       exec
     end
 
+    def enqueue type, attributes
+      @node_queue.push(Node.new(type, attributes['cwd'], attributes['command']))
+    end
+
     def scan node
       node.each_pair do |k, v|
-        if k == 'command'
-          @action_queue.push(Action.new(:command, v))
-        elsif k == 'cwd'
-          @action_queue.push(Action.new(:cwd, v))
-        elsif k.start_with?('tab')
-          @action_queue.push(Action.new(:tab, k))
+        if k.start_with?('tab')
+          enqueue :tab, v
         elsif k.start_with?('vsplit')
-          @action_queue.push(Action.new(:vsplit, k))
+          enqueue :vsplit, v
         elsif k.start_with?('hsplit')
-          @action_queue.push(Action.new(:hsplit, k))
+          enqueue :hsplit, v
         elsif k.start_with?('window')
-          @action_queue.push(Action.new(:window, k))
+          enqueue :window, v
         end
         scan v if v.is_a?(Hash)
       end
@@ -41,37 +39,23 @@ module TermDump
 
     def fallback
       unless @support_split
-        @action_queue.each_index do |i|
-          if @action_queue[i].type == :vsplit || @action_queue[i].type == :hsplit
-            @action_queue[i].type = :tab
+        @node_queue.each_index do |i|
+          if @node_queue[i].type == :vsplit || @node_queue[i].type == :hsplit
+            @node_queue[i].type = :tab
           end
         end
       end
       unless @support_tab
-        @action_queue.each_index { |i|
-          @action_queue[i].type = :window if @action_queue[i].type == :tab }
+        @node_queue.each_index { |i|
+          @node_queue[i].type = :window if @node_queue[i].type == :tab }
       end
     end
 
     def exec
-      terminal = nil
-      @action_queue.each do |action|
-        case action.type
-        when :command
-          terminal.exec action.content
-        when :cwd
-          if action.content != @cwd
-            terminal.exec "cd #{action.content}"
-            @cwd = action.content
-          end
-        when :window
-          terminal = @terminal.new_window
-        when :tab
-          terminal.tab action.content
-        when :vsplit
-          terminal.vsplit action.content
-        when :hsplit
-          terminal.hsplit action.content
+      @node_queue.each do |node|
+        case node.type
+        when :window, :tab, :vsplit, :hsplit
+          @terminal.method(node.type).call(node.cwd, node.command)
         end
       end
     end
