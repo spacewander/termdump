@@ -1,11 +1,21 @@
-require 'termdump/terminal'
-
 module TermDump
   Node = Struct.new(:type, :cwd, :command)
 
   class Session
-    def initialize terminal_type = nil
-      @terminal = Terminal.new
+    def initialize config={}
+      if config.has_key?('terminal')
+        begin
+          terminal = config['terminal']
+          require_relative "terminal/#{terminal}"
+        rescue LoadError
+          puts "Load with terminal #{terminal} error:"
+          puts "Not support #{terminal} yet!"
+          exit 0
+        end
+      else
+        require_relative "terminal/default"
+      end
+      @terminal = Terminal.new(config)
       @node_queue = []
       @support_split = Terminal.public_method_defined?(:vsplit) && 
         Terminal.public_method_defined?(:hsplit)

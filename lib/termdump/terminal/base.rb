@@ -1,5 +1,6 @@
 module TermDump
   class BasicTerminal
+    def initialize config; end
 
     # open a new window of this terminal automatically and focus on
     # +cwd+ is the directory the command executed in
@@ -19,8 +20,5 @@ module TermDump
     # open a new horizontal split of this terminal automatically and focus on
     # implement it if your terminal support tabs
     # def hsplit(cwd, cmd); end
-  end
-
-  class Terminal < BasicTerminal 
   end
 end

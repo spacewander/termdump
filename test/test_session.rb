@@ -81,4 +81,32 @@ class TestSession < MiniTest::Test
     ]
     assert_equal expected, node_queue
   end
+
+  def test_replay
+    task = {
+      'window' => {
+        'cwd' => 'home',
+        'tab' => {
+          'cwd' => 'some',
+          'command' => 'rm -rf /'
+        },
+        'vsplit' => {
+          'cwd' => 'any',
+          'command' => 'ls',
+          'hsplit' => {
+            'cwd' => 'else'
+          }
+        }
+      }
+    }
+    session = TermDump::Session.new({'terminal' => 'mock'})
+    session.replay(task)
+    done_actions = session.instance_variable_get(:@terminal).done_actions
+    expected = [
+      [:window, 'home'],
+      [:tab, 'some', 'rm -rf /'],
+      [:vsplit, 'any', 'ls'],
+      [:hsplit, 'else']
+    ]
+  end
 end
