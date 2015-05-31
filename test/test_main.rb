@@ -8,6 +8,34 @@ class TestCommand < MiniTest::Test
     @main = TermDump::Main.new
   end
 
+  def test_session_actions
+    Dir.rmdir("tmp") if Dir.exist?("tmp")
+    Dir.mkdir "tmp"
+    path = File.join Dir.pwd, "tmp"
+    TermDump::Main.class_variable_set :@@session_dir, path
+    status = @main.search_session 'nonexistent'
+    assert_equal File.join(path, 'nonexistent.yml'), status[:name]
+    assert_equal false, status[:exist]
+
+    @main.save 'termdump', true # print to stdout
+    assert_equal 2, Dir.entries(path).size
+    @main.save 'termdump', false
+    assert_equal 3, Dir.entries(path).size
+    status = @main.search_session 'termdump'
+    assert_equal true, status[:exist]
+
+    # edit_session can't be tested automatically
+    res = @main.load_file 'termdump'
+    assert_equal true, res.is_a?(Hash)
+
+    task = @main.check res # the output of res may be modified
+    assert_equal true, task.is_a?(Hash)
+
+    @main.delete_session 'termdump'
+    assert_equal 2, Dir.entries(path).size
+    Dir.rmdir "tmp"
+  end
+
   def test_path
     prefix = @main.exact_commom_prefix(['~/termdump/bin', '~/termdump/lib', 
                                '~/termdump/test', '~'])
