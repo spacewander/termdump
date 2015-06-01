@@ -9,7 +9,23 @@ module TermDump
   class SessionSyntaxError < StandardError; end
 
   class Main
-    @@session_dir = "#{Dir.home}/.config/termdump/session"
+    BASE_DIR = "#{Dir.home}/.config/termdump/" # only for posix file system
+    @@session_dir = BASE_DIR + "session"
+    @@config_file = BASE_DIR + "configure.yml"
+
+    def initialize
+      @config = read_configure 
+    end
+
+    # Read configure from @@config_file if this file exists and return a Hash as result.
+    # The configure format is yaml.
+    def read_configure
+      if File.exist? @@config_file
+        YAML.load(IO.read(@@config_file))
+      else
+        {}
+      end
+    end
 
     def save session_name, print_stdout
       # TODO rewrite it once posixpsutil is mature
@@ -244,7 +260,7 @@ module TermDump
           puts "Parse session file error: #{e.message}"
           exit 1
         end
-        Session.new.replay(ptree)
+        Session.new(@config).replay(ptree)
       end
     end
 
@@ -382,6 +398,7 @@ module TermDump
               # match is sth like ${foo}
               name = match[2...-1]
               value = variables['$' + name]
+              # Enter value for unknown variables
               if value.nil?
                 print "Enter the value of '#{name}':"
                 value = $stdin.gets.chomp

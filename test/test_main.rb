@@ -8,6 +8,15 @@ class TestCommand < MiniTest::Test
     @main = TermDump::Main.new
   end
 
+  def test_read_configure
+    config = {'terminal' => 'mock', 'new_window' => 'ctrl+n' }
+    IO.write "config_fixture", YAML.dump(config)
+    TermDump::Main.class_variable_set :@@config_file, "config_fixture"
+    main = TermDump::Main.new
+    assert_equal config, main.instance_variable_get(:@config)
+    File.delete "config_fixture"
+  end
+
   def test_session_actions
     Dir.rmdir("tmp") if Dir.exist?("tmp")
     Dir.mkdir "tmp"

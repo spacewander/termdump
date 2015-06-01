@@ -2,6 +2,12 @@ module TermDump
   Node = Struct.new(:type, :cwd, :command)
 
   class Session
+    # Optional Configures:
+    # * terminal: The type of terminal
+    # * new_window: The key sequence used to open a new window
+    # * new_tab: The key sequence used to open a new tab
+    # * new_vsplit: The key sequence used to open a new vsplit
+    # * new_hsplit: The key sequence used to open a new hsplit
     def initialize config={}
       if config.has_key?('terminal')
         begin

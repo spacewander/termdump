@@ -1,6 +1,18 @@
 module TermDump
   class BasicTerminal
-    def initialize config; end
+    def initialize config
+      @user_defined_config = config
+      @config = {}
+      @default_config = {}
+    end
+
+    # Get user defined value/configure value/default value with a configure item.
+    # Raise keyError if value not found.
+    def configure key
+      @user_defined_config.fetch(key) {|key|
+                                 @config.fetch(key) {|key| 
+                                               @default_config.fetch(key)}}
+    end
 
     # open a new window of this terminal automatically and focus on
     # +cwd+ is the directory the command executed in
