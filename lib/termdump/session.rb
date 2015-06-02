@@ -1,5 +1,5 @@
 module TermDump
-  Node = Struct.new(:type, :cwd, :command)
+  Node = Struct.new(:type, :name, :cwd, :command)
 
   class Session
     # Optional Configures:
@@ -34,20 +34,21 @@ module TermDump
       exec
     end
 
-    def enqueue type, attributes
-      @node_queue.push(Node.new(type, attributes['cwd'], attributes['command']))
+    def enqueue type, name, attributes
+      @node_queue.push(Node.new(type, name, 
+                                attributes['cwd'], attributes['command']))
     end
 
     def scan node
       node.each_pair do |k, v|
         if k.start_with?('tab')
-          enqueue :tab, v
+          enqueue :tab, k, v
         elsif k.start_with?('vsplit')
-          enqueue :vsplit, v
+          enqueue :vsplit, k, v
         elsif k.start_with?('hsplit')
-          enqueue :hsplit, v
+          enqueue :hsplit, k, v
         elsif k.start_with?('window')
-          enqueue :window, v
+          enqueue :window, k, v
         end
         scan v if v.is_a?(Hash)
       end
@@ -71,7 +72,7 @@ module TermDump
       @node_queue.each do |node|
         case node.type
         when :window, :tab, :vsplit, :hsplit
-          @terminal.method(node.type).call(node.cwd, node.command)
+          @terminal.method(node.type).call(node.name, node.cwd, node.command)
         end
       end
     end

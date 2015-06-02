@@ -19,18 +19,18 @@ class TestSession < MiniTest::Test
     @session.instance_variable_set(:@support_tab, false)
     @session.instance_variable_set(:@support_split, true)
     actions = [
-      TermDump::Node.new(:window, ''),
-      TermDump::Node.new(:tab, ''),
-      TermDump::Node.new(:tab, ''),
-      TermDump::Node.new(:window, '')
+      TermDump::Node.new(:window, 'window', ''),
+      TermDump::Node.new(:tab, 'tab', ''),
+      TermDump::Node.new(:tab, 'tab', ''),
+      TermDump::Node.new(:window, 'window', '')
     ]
     inject_node_queue actions
     @session.fallback
     expected = [
-      TermDump::Node.new(:window, ''),
-      TermDump::Node.new(:window, ''),
-      TermDump::Node.new(:window, ''),
-      TermDump::Node.new(:window, '')
+      TermDump::Node.new(:window, 'window', ''),
+      TermDump::Node.new(:window, 'tab', ''),
+      TermDump::Node.new(:window, 'tab', ''),
+      TermDump::Node.new(:window, 'window', '')
     ]
     assert_equal expected, node_queue
   end
@@ -39,18 +39,18 @@ class TestSession < MiniTest::Test
     @session.instance_variable_set(:@support_tab, true)
     @session.instance_variable_set(:@support_split, false)
     actions = [
-      TermDump::Node.new(:window, ''),
-      TermDump::Node.new(:tab, ''),
-      TermDump::Node.new(:vsplit, ''),
-      TermDump::Node.new(:vsplit, '')
+      TermDump::Node.new(:window, 'window', ''),
+      TermDump::Node.new(:tab, 'tab', ''),
+      TermDump::Node.new(:vsplit, 'vsplit', ''),
+      TermDump::Node.new(:vsplit, 'vsplit', '')
     ]
     inject_node_queue actions
     @session.fallback
     expected = [
-      TermDump::Node.new(:window, ''),
-      TermDump::Node.new(:tab, ''),
-      TermDump::Node.new(:tab, ''),
-      TermDump::Node.new(:tab, '')
+      TermDump::Node.new(:window, 'window', ''),
+      TermDump::Node.new(:tab, 'tab', ''),
+      TermDump::Node.new(:tab, 'vsplit', ''),
+      TermDump::Node.new(:tab, 'vsplit', '')
     ]
     assert_equal expected, node_queue
   end
@@ -74,10 +74,10 @@ class TestSession < MiniTest::Test
     }
     @session.scan node
     expected = [
-      TermDump::Node.new(:window, 'home'),
-      TermDump::Node.new(:tab, 'some', 'rm -rf /'),
-      TermDump::Node.new(:vsplit, 'any', 'ls'),
-      TermDump::Node.new(:hsplit, 'else')
+      TermDump::Node.new(:window, 'window', 'home'),
+      TermDump::Node.new(:tab, 'tab', 'some', 'rm -rf /'),
+      TermDump::Node.new(:vsplit, 'vsplit', 'any', 'ls'),
+      TermDump::Node.new(:hsplit, 'hsplit', 'else')
     ]
     assert_equal expected, node_queue
   end
@@ -103,10 +103,10 @@ class TestSession < MiniTest::Test
     session.replay(task)
     done_actions = session.instance_variable_get(:@terminal).done_actions
     expected = [
-      [:window, 'home'],
-      [:tab, 'some', 'rm -rf /'],
-      [:vsplit, 'any', 'ls'],
-      [:hsplit, 'else']
+      [:window, 'window', 'home'],
+      [:tab, 'tab', 'some', 'rm -rf /'],
+      [:vsplit, 'vsplit', 'any', 'ls'],
+      [:hsplit, 'hsplit', 'else']
     ]
   end
 end

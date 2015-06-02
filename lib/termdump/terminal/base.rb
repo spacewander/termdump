@@ -14,23 +14,33 @@ module TermDump
                                                @default_config.fetch(key)}}
     end
 
-    # open a new window of this terminal automatically and focus on
+    # run command in current window
     # +cwd+ is the directory the command executed in
     # +cmd+ if the cmd is nil, don't need to execute it; else execute the cmd
-    def window cwd, cmd
-      raise NotImplementedError.new("window should be implemented to open new window")
+    def exec cwd, cmd
+      raise NotImplementedError.new(
+        "exec should be implemented to execute cmd on current window")
+    end
+
+    # open a new window of this terminal automatically and focus on
+    # +name+ is the name of new window
+    # +cwd+ is the directory the command executed in
+    # +cmd+ if the cmd is nil, don't need to execute it; else execute the cmd
+    def window name, cwd, cmd
+      raise NotImplementedError.new(
+        "window should be implemented to open new window")
     end
 
     # open a new tab of this terminal automatically and focus on
     # implement it if your terminal support tabs
-    # def tab(cwd, cmd); end
+    # def tab(name, cwd, cmd); end
 
     # open a new vertical split of this terminal automatically and focus on
     # implement it if your terminal support tabs
-    # def vsplit(cwd, cmd); end
+    # def vsplit(name, cwd, cmd); end
 
     # open a new horizontal split of this terminal automatically and focus on
     # implement it if your terminal support tabs
-    # def hsplit(cwd, cmd); end
+    # def hsplit(name, cwd, cmd); end
   end
 end
