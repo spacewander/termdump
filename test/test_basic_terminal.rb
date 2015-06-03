@@ -1,6 +1,6 @@
 require 'minitest/autorun'
 
-require 'termdump/terminal/base'
+require 'termdump/terminal/base/base'
 
 class TestBasicTerminal < MiniTest::Test
   def test_configure

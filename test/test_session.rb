@@ -99,7 +99,7 @@ class TestSession < MiniTest::Test
         }
       }
     }
-    session = TermDump::Session.new({'terminal' => 'mock'})
+    session = TermDump::Session.new({'terminal' => 'base/mock'})
     session.replay(task)
     done_actions = session.instance_variable_get(:@terminal).done_actions
     expected = [

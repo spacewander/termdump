@@ -49,6 +49,7 @@ module TermDump
           end
         end
       end
+      return if session_leader_pids.empty?
 
       # get cwd for each session
       session_cwd = {}

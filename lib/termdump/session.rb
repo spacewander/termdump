@@ -19,7 +19,7 @@ module TermDump
           exit 0
         end
       else
-        require_relative "terminal/default"
+        require_relative "terminal/base/default"
       end
       @terminal = Terminal.new(config)
       @node_queue = []
