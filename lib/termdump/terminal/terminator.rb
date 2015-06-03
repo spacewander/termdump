@@ -3,6 +3,7 @@ require_relative 'base/base'
 module TermDump
   class Terminal < BasicTerminal
     def initialize config
+      @user_defined_config = config
       # the config file will be ~/.config/terminator/config, 
       # but it may be overridden with $XDG_CONFIG_HOME 
       # (in which case it will be $XDG_CONFIG_HOME/terminator/config)
@@ -81,23 +82,30 @@ module TermDump
     end
 
     def exec cwd, cmd
-      # TODO
+      sleep 0.5
+      # reduce the pollution of cli history
+      `xdotool getactivewindow type "cd #{cwd}\n"`
+      `xdotool getactivewindow type "#{cmd}\n"` unless cmd.nil?
     end
 
     def window name, cwd, cmd
-      # TODO
+      `xdotool getactivewindow key #{configure 'new_window'}`
+      exec cwd, cmd
     end
 
     def tab name, cwd, cmd
-      # TODO
+      `xdotool getactivewindow key #{configure 'new_tab'}`
+      exec cwd, cmd
     end
 
     def vsplit name, cwd, cmd
-      # TODO
+      `xdotool getactivewindow key #{configure 'new_vsplit'}`
+      exec cwd, cmd
     end
 
     def hsplit name, cwd, cmd
-      # TODO
+      `xdotool getactivewindow key #{configure 'new_hsplit'}`
+      exec cwd, cmd
     end
   end
 end

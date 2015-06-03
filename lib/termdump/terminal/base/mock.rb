@@ -7,6 +7,14 @@ module TermDump
       @done_actions = []
     end
 
+    def exec cwd, cmd
+      if cmd.nil?
+        @done_actions.push(cwd)
+      else
+        @done_actions.push(cwd, cmd)
+      end
+    end
+
     def window name, cwd, cmd
       if cmd.nil? 
         @done_actions.push(:window, name, cwd)

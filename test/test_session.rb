@@ -103,7 +103,7 @@ class TestSession < MiniTest::Test
     session.replay(task)
     done_actions = session.instance_variable_get(:@terminal).done_actions
     expected = [
-      [:window, 'window', 'home'],
+      ['home'],
       [:tab, 'tab', 'some', 'rm -rf /'],
       [:vsplit, 'vsplit', 'any', 'ls'],
       [:hsplit, 'hsplit', 'else']

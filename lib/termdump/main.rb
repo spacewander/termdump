@@ -11,7 +11,7 @@ module TermDump
   class Main
     BASE_DIR = "#{Dir.home}/.config/termdump/" # only for posix file system
     @@session_dir = BASE_DIR + "session"
-    @@config_file = BASE_DIR + "configure.yml"
+    @@config_file = BASE_DIR + "config.yml"
 
     def initialize
       @config = read_configure 
@@ -20,40 +20,49 @@ module TermDump
     # Read configure from @@config_file if this file exists and return a Hash as result.
     # The configure format is yaml.
     def read_configure
-      if File.exist? @@config_file
-        YAML.load(IO.read(@@config_file))
-      else
-        {}
-      end
+      config = {}
+      config = YAML.load(IO.read(@@config_file)) if File.exist? @@config_file
+      config
     end
 
     def save session_name, print_stdout
       # TODO rewrite it once posixpsutil is mature
       this_pid = ::Process.pid.to_s
       pts = Hash.new {|k, v| []}
-      session_leader_pids = []
+      this_terminal_pid = nil
       IO.popen('ps -eo pid,ppid,stat,tty,command').readlines.each do |entry|
         pid, ppid, stat, tty, command = entry.rstrip.split(' ', 5)
         if tty.start_with?('pts/')
           tty.sub!('pts/', '')
           # order by pid asc
-          if pts[tty].empty?
+          case pts[tty].size
+          when 0
             pts[tty] = [Process.new(pid, ppid, stat, command)]
-            session_leader_pids.push(pid)
-          elsif pts[tty].size == 1
+          else
             session_leader = pts[tty].first
             p = Process.new(pid, ppid, stat, command)
-            if p.pid != this_pid && p.is_child_of(session_leader) && p.is_in_foreground
+
+            # this_terminal_pid -> session_leader_pids -> 
+            #   foreground_pids(exclude this_pid)
+            if p.pid == this_pid
+              this_terminal_pid = session_leader.ppid
+            elsif p.is_child_of(session_leader) && p.is_in_foreground
               pts[tty].push(p)
             end
           end
+
         end
       end
-      return if session_leader_pids.empty?
+
+      pts.reject! {|tty, processes| processes.first.ppid != this_terminal_pid }
+      return if pts.empty?
 
       # get cwd for each session
       session_cwd = {}
-      IO.popen("pwdx #{session_leader_pids.to_s[1...-1].gsub(',', ' ')}") do |f|
+      session_leader_pids = pts.values.map { |processes|
+        processes.first.pid
+      }.join(' ')
+      IO.popen("pwdx #{session_leader_pids}") do |f|
         f.readlines.each do |entry|
           # 1234: /home/xxx/yyy...
           pid, cwd = entry.split(" ", 2)

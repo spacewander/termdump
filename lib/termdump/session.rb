@@ -69,6 +69,9 @@ module TermDump
     end
 
     def exec
+      current_tab = @node_queue.first
+      @terminal.exec current_tab.cwd, current_tab.command
+      @node_queue.shift
       @node_queue.each do |node|
         case node.type
         when :window, :tab, :vsplit, :hsplit
