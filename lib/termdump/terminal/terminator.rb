@@ -12,8 +12,12 @@ module TermDump
       else
         configure = "#{ENV['XDG_CONFIG_HOME']}/terminator/config"
       end
-      lines = IO.readlines(configure) if File.exist?(configure)
-      @config = parse_configure lines
+      if File.exist?(configure)
+        lines = IO.readlines(configure)
+        @config = parse_configure lines
+      else
+        @config = {}
+      end
       @default_config = {
         'new_window' => 'ctrl+shift+i',
         'new_tab' => 'ctrl+shift+t',
