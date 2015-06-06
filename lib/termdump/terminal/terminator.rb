@@ -1,6 +1,8 @@
 require_relative 'base/base'
 
 module TermDump
+  # This Terminal class is for [terminator]()
+  # See `man terminator` and `man termintor_config`
   class Terminal < BasicTerminal
     def initialize config
       @user_defined_config = config

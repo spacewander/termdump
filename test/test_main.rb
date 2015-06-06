@@ -26,9 +26,14 @@ class TestCommand < MiniTest::Test
     assert_equal File.join(path, 'nonexistent.yml'), status[:name]
     assert_equal false, status[:exist]
 
-    @main.save 'termdump', true # print to stdout
+    @main.save 'termdump', true, false # print to stdout
     assert_equal 2, Dir.entries(path).size
-    @main.save 'termdump', false
+    # print to stdout and exclude current ptty
+    # The output is the same as above, as the parent of `rake test` is `rake`
+    # but not the session leader
+    @main.save 'termdump', true, true 
+
+    @main.save 'termdump', false, false
     assert_equal 3, Dir.entries(path).size
     status = @main.search_session 'termdump'
     assert_equal true, status[:exist]

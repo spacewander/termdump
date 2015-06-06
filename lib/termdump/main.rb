@@ -56,11 +56,15 @@ module TermDump
       puts "Incorrect choice received!"
     end
 
-    def save session_name, print_stdout
+    # Save the session into session file.
+    # If +print_stdout+ is true, print to stdout instead of saving it.
+    # If +exclude_current_pty+ is true, save all pty instead of the current one
+    def save session_name, print_stdout, exclude_current_pty
       # TODO rewrite it once posixpsutil is mature
       this_pid = ::Process.pid.to_s
       pts = Hash.new {|k, v| []}
       this_terminal_pid = nil
+
       IO.popen('ps -eo pid,ppid,stat,tty,command').readlines.each do |entry|
         pid, ppid, stat, tty, command = entry.rstrip.split(' ', 5)
         if tty.start_with?('pts/')
@@ -85,7 +89,15 @@ module TermDump
         end
       end
 
-      pts.reject! {|tty, processes| processes.first.ppid != this_terminal_pid }
+      if exclude_current_pty
+        this_ppid = ::Process.ppid.to_s
+        pts.reject! do |tty, processes| 
+          session_leader = processes.first
+          session_leader.ppid != this_terminal_pid || session_leader.pid == this_ppid
+        end
+      else
+        pts.reject! {|tty, processes| processes.first.ppid != this_terminal_pid }
+      end
       return if pts.empty?
 
       # get cwd for each session

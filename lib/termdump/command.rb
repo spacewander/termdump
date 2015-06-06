@@ -8,7 +8,7 @@ module TermDump
   class Command
     def initialize args
       @args = OpenStruct.new(:stdout => false, :action => :load, :list => false,
-                             :session => '')
+                             :session => '', :exclude => false)
       OptionParser.new do |opts|
         opts.banner = "Usage: termdump [options] [session]"
         opts.on('-e', '--edit [session]', 'edit session') do |name|
@@ -25,7 +25,11 @@ module TermDump
         end
 
         opts.on_tail('--stdout', 'print dump result to stdout') {
-          @args.stdout = true }
+          @args.stdout = true 
+        }
+        opts.on_tail('--exclude', 'exclude current pty') {
+          @args.exclude = true
+        }
         opts.on_tail('-l', '--list', 'list all sessions') { @args.list = true }
         opts.on('-i', '--init', 'initialize configure interactively') {
           @args.action = :init
@@ -41,9 +45,11 @@ module TermDump
           args.size > 0 ? @args.session = args[0] : @args.list = true
         end
         # --stdout should be used with --save
-        if @args.stdout && @args.action != :save
-          puts opts.help 
-          exit 1
+        if @args.stdout || @args.exclude
+          if @args.action != :save
+            puts opts.help 
+            exit 1
+          end
         end
       end
     end
@@ -51,7 +57,7 @@ module TermDump
     def run
       main = Main.new
       if @args.action == :save
-        main.save @args.session, @args.stdout
+        main.save @args.session, @args.stdout, @args.exclude
       elsif @args.action == :init
         main.init
       elsif @args.list

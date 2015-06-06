@@ -18,35 +18,49 @@ class TestCommand < MiniTest::Test
     args = get_parsed_args ""
     assert_equal :load, args.action
     assert_equal true, args.list
+
     # delete one session
     args = get_parsed_args "-d ruby"
     assert_equal false, args.list
     assert_equal :delete, args.action
     assert_equal 'ruby', args.session
+
     # list all sessions and delete one
     args = get_parsed_args "-d"
     assert_equal :delete, args.action
     assert_equal true, args.list
+
     # load one session
     args = get_parsed_args "ruby"
     assert_equal :load, args.action
     assert_equal 'ruby', args.session
     assert_equal false, args.list
+
     # edit one session
     args = get_parsed_args "-e ruby"
     assert_equal :edit, args.action
     assert_equal 'ruby', args.session
+
     # dump to a session
     args = get_parsed_args "-s"
     assert_equal :save, args.action
     assert_equal true, args.list
     args = get_parsed_args "-s ruby"
     assert_equal 'ruby', args.session
+
     # print result to stdout(works with -s)
     args = get_parsed_args "-s ruby --stdout"
     assert_equal true, args.stdout
+
     # initialize interactively
     args = get_parsed_args "-i"
     assert_equal :init, args.action
+
+    # dump exclude current tab
+    args = get_parsed_args "-s ruby --exclude"
+    assert_equal true, args.exclude
+    args = get_parsed_args "-s ruby --exclude --stdout"
+    assert_equal true, args.stdout
+    assert_equal true, args.exclude
   end
 end
