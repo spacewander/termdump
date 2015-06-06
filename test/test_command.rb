@@ -43,7 +43,10 @@ class TestCommand < MiniTest::Test
     args = get_parsed_args "-s ruby"
     assert_equal 'ruby', args.session
     # print result to stdout(works with -s)
-    args = get_parsed_args "-s ruby -o"
+    args = get_parsed_args "-s ruby --stdout"
     assert_equal true, args.stdout
+    # initialize interactively
+    args = get_parsed_args "-i"
+    assert_equal :init, args.action
   end
 end

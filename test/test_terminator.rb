@@ -3,6 +3,7 @@ require 'minitest/autorun'
 require 'termdump/terminal/terminator'
 
 class TestTerminator < MiniTest::Test
+  ENV['XDG_CONFIG_HOME'] = 'nonexist' # test configure not found
   @@term = TermDump::Terminal.new({})
 
   def test_convert_key_sequence

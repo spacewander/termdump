@@ -25,6 +25,37 @@ module TermDump
       config
     end
 
+    # initialize configure and session directory interactively
+    def init
+      if Dir.exist?(BASE_DIR)
+        return puts "The configure has been initialized yet"
+      end
+      dir = File.dirname(File.realpath(__FILE__)) # for ruby > 2.0.0, use __dir__
+      files = File.join(dir, 'terminal', '*.rb')
+      support_term = Dir.glob(files).map {|fn| File.basename(fn, '.rb')}
+
+      puts "Currently support terminals:"
+      support_term.each_with_index {|term, i| puts "[#{i}]\t#{term}"}
+      print "Select your terminal: "
+      choice = $stdin.gets.chomp
+      if choice.to_i != 0 || choice == '0'
+        choice = choice.to_i
+        if 0 <= choice && choice < support_term.size
+          print "Will create #{@@config_file} and #{@@session_dir}, go on?[Y/N] "
+          answer = $stdin.gets.chomp
+          return if answer == 'N' || answer == 'n'
+          FileUtils.mkpath @@session_dir
+          configure = {
+            'terminal' => support_term[choice]
+          }
+          IO.write @@config_file, YAML.dump(configure)
+          puts "Ok, the configure is initialized now. Happy coding!"
+          return
+        end
+      end
+      puts "Incorrect choice received!"
+    end
+
     def save session_name, print_stdout
       # TODO rewrite it once posixpsutil is mature
       this_pid = ::Process.pid.to_s
