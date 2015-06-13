@@ -1,7 +1,7 @@
 require_relative 'base/base'
 
 module TermDump
-  # This Terminal class is for [terminator]()
+  # This Terminal class is for [terminator](http://gnometerminator.blogspot.sg/p/introduction.html)
   # See `man terminator` and `man termintor_config`
   class Terminal < BasicTerminal
     def initialize config
@@ -52,7 +52,7 @@ module TermDump
           else
             key, value = line.split('=', 2)
             key.strip!
-            first, second, third = value.rpartition('#')
+            first, _, third = value.rpartition('#')
             value = (first != "" ? first.strip : third.strip)
             key = CONFIGURE_KEY_MAPPER[key]
             unless key.nil? || value == ''
