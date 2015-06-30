@@ -3,7 +3,7 @@ require 'yaml'
 
 require 'termdump/main'
 
-class TestCommand < MiniTest::Test
+class TestMain < MiniTest::Test
   def setup
     @main = TermDump::Main.new
   end
@@ -37,7 +37,6 @@ class TestCommand < MiniTest::Test
     assert_equal 3, Dir.entries(path).size
     status = @main.search_session 'termdump'
     assert_equal true, status[:exist]
-
     # edit_session can't be tested automatically
     res = @main.load_file 'termdump'
     assert_equal true, res.is_a?(Hash)

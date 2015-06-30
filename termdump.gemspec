@@ -11,10 +11,10 @@ Gem::Specification.new do |s|
   s.email       = ["spacewanderlzx@gmail.com"]
   s.homepage    = 'https://github.com/spacewander/termdump'
   s.summary     = 'Dump your (pseudo)terminal session and replay it'
-  s.platform    = Gem::Platform.local
   s.description = 'Dump your (pseudo)terminal session and replay it'
   s.files       = Dir["lib/**/*"] + ["README.md", "Rakefile"]
   s.test_files  = Dir["test/*"]
+  s.executables << 'termdump'
   s.license     = 'MIT'
   s.required_ruby_version = '>= 1.9'
 end
