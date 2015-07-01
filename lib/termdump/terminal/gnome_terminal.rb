@@ -5,15 +5,11 @@ module TermDump
   class Terminal < BasicTerminal
     def initialize config
       @user_defined_config = config
-      #configure = "#{Dir.home}/.gconf/apps/gnome-terminal/keybindings/%gconf.xml"
-      #if File.exist?(configure)
-        #@config = parse_configure IO.read(configure)
-      #end
-      # Using gconftool is a better idea?
       @keybindings = '/apps/gnome-terminal/keybindings'
-      @config = {}
-      add_configure_key 'new_window'
-      add_configure_key 'new_tab'
+      @config = {
+        'new_window' => get_configure_key('new_window'),
+        'new_tab' => get_configure_key('new_tab')
+      }
 
       @default_config = {
         'new_window' => 'ctrl+alt+t',
@@ -21,12 +17,10 @@ module TermDump
       }
     end
 
-    # add the configure value to @config by looking up @keybindings with configure key
-    # +key+ is a string
-    def add_configure_key key
+    def get_configure_key key
       value = IO.popen(
         "gconftool -g '#{@keybindings}/#{key}' 2>/dev/null").read.chomp
-      @config[key] = convert_key_sequence(value) if value != ''
+      convert_key_sequence(value) if value != ''
     end
 
     # Doing convertion below and join them with '+'
