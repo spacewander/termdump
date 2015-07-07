@@ -9,8 +9,8 @@ module TermDump
 
     def exec cwd, cmd
       sleep 0.5
-      `xdotool getactivewindow type "cd #{cwd}\n"`
-      `xdotool getactivewindow type "#{cmd}\n"` unless cmd.nil?
+      `xdotool getactivewindow type #{escape("cd #{cwd}\n")}`
+      `xdotool getactivewindow type #{escape("#{cmd}\n")}` unless cmd.nil?
     end
 
     def window name, cwd, cmd

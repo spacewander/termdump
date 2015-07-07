@@ -33,16 +33,16 @@ module TermDump
       with_name = ''
       with_cwd = ''
       with_cmd = ''
-      with_name = "-r '#{name}'" unless name.nil? || name == ''
-      with_cwd = "-n '#{cwd}'" unless cwd.nil? || cwd == ''
-      with_cmd = "-e '#{cmd}'" unless cmd.nil? || cmd == ''
+      with_name = "-r #{escape(name)}" unless name.nil? || name == ''
+      with_cwd = "-n #{escape(cwd)}" unless cwd.nil? || cwd == ''
+      with_cmd = "-e #{escape(cmd)}" unless cmd.nil? || cmd == ''
       `guake #{with_name} #{with_cwd} #{with_cmd}`
     end
 
     def exec cwd, cmd
       exec_cmd = "cd #{cwd}"
       exec_cmd += " && #{cmd}" unless cmd.nil? || cmd == ''
-      `guake -e "#{exec_cmd}"`
+      `guake -e #{escape(exec_cmd)}`
     end
   end
 end

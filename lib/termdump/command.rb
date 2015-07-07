@@ -11,6 +11,9 @@ module TermDump
                              :session => '', :exclude => false)
       OptionParser.new do |opts|
         opts.banner = "Usage: termdump [options] [session]"
+        opts.on('-i', '--init', 'initialize configure interactively') {
+          @args.action = :init
+        }
         opts.on('-e', '--edit [session]', 'edit session') do |name|
           @args.action = :edit
           name.nil? ? @args.list = true : @args.session = name
@@ -24,15 +27,14 @@ module TermDump
           name.nil? ? @args.list = true : @args.session = name
         end
 
-        opts.on_tail('--stdout', 'print dump result to stdout') {
+        opts.on_tail('--stdout', 'print dump result to stdout while saving a session') {
           @args.stdout = true 
         }
-        opts.on_tail('--exclude', 'exclude current pty') {
+        opts.on_tail('--exclude', 'exclude current pty while saving a session') {
           @args.exclude = true
         }
-        opts.on_tail('-l', '--list', 'list all sessions') { @args.list = true }
-        opts.on('-i', '--init', 'initialize configure interactively') {
-          @args.action = :init
+        opts.on_tail('-l', '--list', 'list all sessions') { 
+          @args.list = true
         }
         opts.on_tail('-v', '--version', 'print version') do
           puts VERSION

@@ -6,15 +6,6 @@ class TestTerminator < MiniTest::Test
   ENV['XDG_CONFIG_HOME'] = 'nonexist' # test configure not found
   @@term = TermDump::Terminal.new({})
 
-  def test_convert_key_sequence
-    assert_equal 'Ctrl+a+Shift', @@term.convert_key_sequence('<Ctrl>A<Shift>')
-    assert_equal 'Ctrl+Shift+a', @@term.convert_key_sequence('<Primary><Shift>A')
-    assert_equal 'Alt+space', @@term.convert_key_sequence('<Alt>space')
-    assert_equal 'Super+plus', @@term.convert_key_sequence('<Super>plus')
-    assert_equal 'a', @@term.convert_key_sequence('A')
-    assert_equal 'Shift+a', @@term.convert_key_sequence('<Shift>A')
-  end 
-
   def test_parse_configure
     lines = [
       '[global_config]',

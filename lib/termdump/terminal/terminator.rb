@@ -65,33 +65,10 @@ module TermDump
       config
     end
 
-    # Doing convertion below and join them with '+'
-    # case 0 : <Ctrl><Shift><Alt><Super> => Ctrl Shift Alt Super
-    # case 1 : [A-Z] => [a-z]
-    # case 2 : <Primary> => Ctrl
-    # case 3 : [0-9] [a-z] UpDownLeftRight F[0-12] Return space... => not changed
-    # For example, 
-    # '<Primary><Shift>A' => 'Ctrl+Shift+a'
-    # '<Alt>space' => 'Alt+space'
-    def convert_key_sequence in_sequence
-      in_sequence.tr_s!('[<>]', ' ')
-      out_sequence = in_sequence.split.map do |key|
-        if /^[[:upper:]]$/.match(key)
-          key.downcase
-        elsif key == 'Primary'
-          'Ctrl'
-        else
-          key
-        end
-      end
-      out_sequence.join('+')
-    end
-
     def exec cwd, cmd
       sleep 0.5
-      # reduce the pollution of cli history
-      `xdotool getactivewindow type "cd #{cwd}\n"`
-      `xdotool getactivewindow type "#{cmd}\n"` unless cmd.nil?
+      `xdotool getactivewindow type #{escape("cd #{cwd}\n")}`
+      `xdotool getactivewindow type #{escape("#{cmd}\n")}` unless cmd.nil?
     end
 
     def window name, cwd, cmd

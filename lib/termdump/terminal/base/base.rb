@@ -1,5 +1,9 @@
+require_relative './terminal_helper'
+
 module TermDump
   class BasicTerminal
+    include TerminalHelper
+
     def initialize config
       @user_defined_config = config
       @config = {}
@@ -8,10 +12,10 @@ module TermDump
 
     # Get user defined value/configure value/default value with a configure item.
     # Raise keyError if value not found.
-    def configure key
-      @user_defined_config.fetch(key) {|key|
-                                 @config.fetch(key) {|key| 
-                                               @default_config.fetch(key)}}
+    def configure configure_key
+      @user_defined_config.fetch(configure_key) {|key_in_config|
+        @config.fetch(key_in_config) {|default_key|
+          @default_config.fetch(default_key)}}
     end
 
     # run command in current window
