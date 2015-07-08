@@ -258,6 +258,7 @@ module TermDump
           puts "No session exists in #{@@session_dir}"
         else
           puts "order:\tsession name\tctime\t\tatime"
+          sessions.sort!{|x, y| File.atime(y) <=> File.atime(x) }
           sessions.each_with_index do |f, i|
             cdate = File.ctime(f).to_date.strftime
             adate = File.atime(f).to_date.strftime
