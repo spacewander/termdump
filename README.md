@@ -7,14 +7,13 @@ Dump your (pseudo)terminal session and replay it. You can use it to bootstrap da
 ## Usage
 
 ```shell
-$ termdump -h
 Usage: termdump [options] [session]
+    -i, --init                       initialize configure interactively
     -e, --edit [session]             edit session
     -d, --delete [session]           delete session
     -s, --save [session]             save session
-    -i, --init                       initialize configure interactively
-        --stdout                     print dump result to stdout
-        --exclude                    exclude current pty
+        --stdout                     print dump result to stdout while saving a session
+        --exclude                    exclude current pty while saving a session
     -l, --list                       list all sessions
     -v, --version                    print version
 ```
@@ -58,7 +57,7 @@ Read more in [session syntax and examples](sessions.md) and [configure](configur
 - [x] gnome-terminal
 - [x] terminator
 - [x] xterm
-- [ ] guake
+- [x] guake
 - [ ] urxvt
 - [ ] konsole
 - [ ] xfce4-terminal

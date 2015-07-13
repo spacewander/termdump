@@ -17,5 +17,4 @@ Rake::TestTask.new do |t|
   end
 end
 
-
 task :default => :test

@@ -1,0 +1,47 @@
+# bash completion script for termdump
+_termdump() {
+    local pre cur
+
+    COMPREPLY=()
+    pre=${COMP_WORDS[COMP_CWORD-1]}
+    cur=${COMP_WORDS[COMP_CWORD]}
+
+    list_session_dir() {
+         find ~/.config/termdump/session/ -iname '*.yml' -exec basename -s '.yml' {} \;
+    }
+
+    case "$pre" in
+    -e|--edit|-d|--delete )
+        COMPREPLY=( $( compgen -W "$(list_session_dir)" ) )
+        return 0
+        ;;
+    -i )
+        return 0
+        ;;
+    -l|--list )
+        COMPREPLY=( $( compgen -W "-d --delete -e --edit" ) )
+        return 0
+        ;;
+    -s )
+        COMPREPLY=( $( compgen -W "--exclude --stdout" -- $cur ) )
+        COMPREPLY+=( $( compgen -W "$(list_session_dir)" -- $cur ) )
+        return 0
+    esac
+    
+    complete_options() {
+        local opts
+        opts='-i --init -d --delete -e --edit -h --help -l --list -s --save 
+        -v --version'
+        echo "$opts"
+    }
+
+    case "$cur" in
+    -* )
+        COMPREPLY=( $( compgen -W "$(complete_options)" -- $cur ) )
+        ;;
+    * )
+        COMPREPLY=( $( compgen -W "$(complete_options)" -- $cur ) )
+        COMPREPLY+=( $( compgen -W "$(list_session_dir)" -- $cur ) )
+    esac
+}
+complete -F _termdump filenames termdump

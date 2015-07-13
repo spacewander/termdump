@@ -1,0 +1,25 @@
+#compdef termdump
+
+local state session_dir
+session_dir="(~/.config/termdump/session/)"
+
+_arguments \
+    {-i,--init}'[initialize configure interactively]' \
+    {-e,--edit}'[edit session]: :->session' \
+    {-d,--delete}'[delete session]: :->session' \
+    {-s,--save}'[save session]: :->save' \
+    {-l,--list}'[list all sessions]' \
+    {-v,--version}'[print version]' \
+    {-h,--help}'[show usage message]' \
+    '*:load session:->session' && return 0
+
+case "$state" in
+    session )
+        _files -W ${session_dir} -g '*.yml(:t:r)'
+        ;;
+    save )
+        _arguments \
+            '--exclude[exclude current pty while saving a session]' \
+            '--stdout[print dump result to stdout while saving a session]' \
+            '*:save session:_files -W ${session_dir} -g "*.yml(:t:r)"'
+esac

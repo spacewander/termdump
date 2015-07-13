@@ -1,0 +1,15 @@
+#!/usr/bin/env rake
+# encoding: UTF-8
+
+require 'rake'
+require 'fileutils'
+
+task :prepare do
+  bash_completion_dir = '/etc/bash_completion.d'
+  if Dir.exist?(bash_completion_dir)
+    FileUtils.cp './termdump', bash_completion_dir, :verbose => true
+  end
+
+  #FileUtils.cp './_termdump', '/usr/share/zsh/functions/Completion/_termdump'
+end
+task :default => :prepare
