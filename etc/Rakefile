@@ -7,9 +7,13 @@ require 'fileutils'
 task :prepare do
   bash_completion_dir = '/etc/bash_completion.d'
   if Dir.exist?(bash_completion_dir)
-    FileUtils.cp './termdump', bash_completion_dir, :verbose => true
+    FileUtils.cp './termdump', bash_completion_dir
   end
-
   #FileUtils.cp './_termdump', '/usr/share/zsh/functions/Completion/_termdump'
+  
+  man_page_dir = '/usr/share/man/man1'
+  if Dir.exist?(man_page_dir)
+    FileUtils.cp 'termdump.1', man_page_dir
+  end
 end
 task :default => :prepare

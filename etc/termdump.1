@@ -1,0 +1,79 @@
+.TH "TERMDUMP" "1" "Jul 17, 2015" "Termdump User Manuals" ""
+.SH NAME
+.PP
+termdump \-\- Dump your pty session and replay it
+.SH SYNOPSIS
+.PP
+termdump [\f[I]option\f[]] [\f[I]session\f[]]
+.SH DESCRIPTION
+.PP
+Dump your (pseudo)terminal session and replay it.
+You can use it to bootstrap daily work.
+.SH OPTIONS
+.TP
+.B \-h, \-\-help
+output usage information
+.RS
+.RE
+.TP
+.B \-i, \-\-init
+initialize configure interactively
+.RS
+.RE
+.TP
+.B \-e, \-\-edit \f[I]session\f[]
+edit session
+.RS
+.RE
+.TP
+.B \-d, \-\-delete \f[I]session\f[]
+delete session
+.RS
+.RE
+.TP
+.B \-s, \-\-save \f[I]session\f[]
+save session
+.RS
+.RE
+.TP
+.B \-l, \-\-list
+list all sessions
+.RS
+.RE
+.TP
+.B \-v, \-\-version
+print version
+.RS
+.RE
+.PP
+If you run \f[C]termdump\f[] with a session name only, it will replay
+the session.
+.SH SAVE OPTIONS
+.TP
+.B \-\-stdout
+print dump result to stdout while saving a session
+.RS
+.RE
+.TP
+.B \-\-exclude
+exclude current pty while saving a session
+.RS
+.RE
+.SH EXAMPLE
+.PP
+At the first time you use this tool, you may need to run
+\f[C]termdump\ \-i\f[] to set up configure.
+.PP
+Then you can run \f[C]termdump\ \-s\ [\-\-exclude]\f[] to save your
+current pty session.
+.PP
+Run \f[C]termdump\ \-l\f[] to list all saved sessions,
+\f[C]termdump\ \-e\f[] to edit one, and \f[C]termdump\ \-d\f[] to delete
+one.
+.PP
+To replay your session, you can run \f[C]termdump\ [session]\f[].
+.SH REPORTING BUGS
+.PP
+<https://github.com/spacewander/termdump/issues>
+.SH AUTHORS
+spacewander <spacewanderlzx@gmail.com>.
