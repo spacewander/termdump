@@ -15,7 +15,9 @@ module TermDump
     def configure configure_key
       @user_defined_config.fetch(configure_key) {|key_in_config|
         @config.fetch(key_in_config) {|default_key|
-          @default_config.fetch(default_key)}}
+          @default_config.fetch(default_key, nil)
+        }
+      }
     end
 
     # run command in current window

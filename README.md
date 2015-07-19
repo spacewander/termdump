@@ -55,12 +55,14 @@ Read more in [session syntax and examples](sessions.md) and [configure](configur
 ## Supported terminal
 
 - [x] gnome-terminal
-- [x] terminator
-- [x] xterm
 - [x] guake
-- [ ] urxvt
 - [ ] konsole
+- [x] terminator
+- [ ] tilda
+- [x] urxvt
 - [ ] xfce4-terminal
+- [x] xterm
+- [ ] yakuake
 
 If you want to support Terminal X, you can write a terminal file under
 https://github.com/spacewander/termdump/tree/master/lib/termdump/terminal and then send me a pr.
