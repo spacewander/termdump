@@ -8,6 +8,7 @@ module TermDump
     # case 1 : [A-Z] => [a-z]
     # case 2 : <Primary> => Ctrl
     # case 3 : [0-9] [a-z] UpDownLeftRight F[0-12] Return space... => not changed
+    # case 4 : <Control> => Ctrl
     # For example, 
     # '<Primary><Shift>A' => 'Ctrl+Shift+a'
     # '<Alt>space' => 'Alt+space'
@@ -17,6 +18,8 @@ module TermDump
         if /^[[:upper:]]$/.match(key)
           key.downcase
         elsif key == 'Primary'
+          'Ctrl'
+        elsif key == 'Control'
           'Ctrl'
         else
           key

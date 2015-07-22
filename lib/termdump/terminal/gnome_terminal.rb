@@ -30,7 +30,7 @@ module TermDump
     end
 
     def window name, cwd, cmd
-      # `getactivewindow key` not work on gnome-terminal, bug?
+      # `getactivewindow key` not work on gnome-terminal
       `xdotool key #{configure 'new_window'}`
       exec cwd, cmd
     end

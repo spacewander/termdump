@@ -13,6 +13,7 @@ module TermDump
       @config = {}
       @default_config = {
         # there is no default new_window key binding in urxvt
+        'new_window' => nil,
         'new_tab' => 'shift+Down', # it should be 'Down' not 'down'
       }
     end
@@ -34,6 +35,7 @@ module TermDump
     end
 
     def tab name, cwd, cmd
+      # use `urxvt -pe tabbed` to enable tab support
       `xdotool getactivewindow key #{configure 'new_tab'}`
       exec cwd, cmd
     end

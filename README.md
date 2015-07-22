@@ -58,7 +58,7 @@ Read more in [session syntax and examples](sessions.md) and [configure](configur
 - [x] guake
 - [ ] konsole
 - [x] terminator
-- [ ] tilda
+- [x] tilda
 - [x] urxvt
 - [ ] xfce4-terminal
 - [x] xterm

@@ -28,7 +28,7 @@ module TermDump
       }
     end
 
-    CONFIGURE_KEY_MAPPER = {
+    @@CONFIGURE_KEY_MAPPER = {
       'new_tab' => 'new_tab',
       'split_vert' => 'new_vsplit',
       'split_horiz' => 'new_hsplit',
@@ -38,7 +38,8 @@ module TermDump
     #
     # The configure format of terminator:
     #[keybindings]
-    #  full_screen = <Ctrl><Shift>F11
+    #  full_screen = <Ctrl><Shift>F11 # ...
+    #  # ...
     #
     # We only care about the keybindings.
     def parse_configure lines
@@ -50,16 +51,19 @@ module TermDump
           if line.start_with?('[') || line == ''
             in_keybindings = false
           else
-            key, value = line.split('=', 2)
-            key.strip!
-            first, _, third = value.rpartition('#')
-            value = (first != "" ? first.strip : third.strip)
-            key = CONFIGURE_KEY_MAPPER[key]
-            unless key.nil? || value == ''
-              config[key] = convert_key_sequence(value)
+            unless line.start_with?('#')
+              key, value = line.split('=', 2)
+              key.strip!
+              first, _, third = value.rpartition('#')
+              value = (first != "" ? first.strip : third.strip)
+              key = @@CONFIGURE_KEY_MAPPER[key]
+              unless key.nil? || value == ''
+                config[key] = convert_key_sequence(value)
+              end
             end
           end
-        end 
+
+        end  # end in keybindings
         in_keybindings = true if line == '[keybindings]'
       end
       config
