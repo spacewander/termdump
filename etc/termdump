@@ -7,6 +7,7 @@ _termdump() {
     cur=${COMP_WORDS[COMP_CWORD]}
 
     list_session_dir() {
+         find . -iname '*.yml' -exec basename -s '.yml' {} \;
          find ~/.config/termdump/session/ -iname '*.yml' -exec basename -s '.yml' {} \;
     }
 

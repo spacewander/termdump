@@ -1,4 +1,5 @@
 require 'minitest/autorun'
+require 'tempfile'
 require 'yaml'
 
 require 'termdump/main'
@@ -21,6 +22,7 @@ class TestMain < MiniTest::Test
     Dir.rmdir("tmp") if Dir.exist?("tmp")
     Dir.mkdir "tmp"
     path = File.join Dir.pwd, "tmp"
+    old_path = TermDump::Main.class_variable_get :@@session_dir
     TermDump::Main.class_variable_set :@@session_dir, path
     status = @main.search_session 'nonexistent'
     assert_equal File.join(path, 'nonexistent.yml'), status[:name]
@@ -37,16 +39,49 @@ class TestMain < MiniTest::Test
     assert_equal 3, Dir.entries(path).size
     status = @main.search_session 'termdump'
     assert_equal true, status[:exist]
+    assert_equal true, File.size(status[:name]) > 0
     # edit_session can't be tested automatically
-    res = @main.load_file 'termdump'
-    assert_equal true, res.is_a?(Hash)
-
-    task = @main.check res # the output of res may be modified
-    assert_equal true, task.is_a?(Hash)
+    # so is load_session
 
     @main.delete_session 'termdump'
     assert_equal 2, Dir.entries(path).size
+    # "tmp" should be empty
     Dir.rmdir "tmp"
+    TermDump::Main.class_variable_set :@@session_dir, old_path
+  end
+
+  def test_search_session_with_or_without_extname
+    name = "test"
+    status = @main.search_session name
+    assert_equal false, status[:exist]
+
+    session_dir = TermDump::Main.class_variable_get :@@session_dir
+    session_extname = TermDump::Main.class_variable_get :@@session_extname
+    assert_equal File.join(session_dir, name + session_extname), status[:name]
+
+    # with or without extname is ok
+    name += session_extname
+    status = @main.search_session name
+    assert_equal File.join(session_dir, name), status[:name]
+  end
+
+  def test_search_session
+    session_extname = TermDump::Main.class_variable_get :@@session_extname
+    Tempfile.open(['test', session_extname], Dir.pwd) do |tmp|
+      # with absolute path
+      status = @main.search_session tmp.path
+      assert_equal true, status[:exist]
+      # with relative path in pwd
+      status = @main.search_session File.basename(tmp.path)
+      assert_equal true, status[:exist]
+    end
+
+    Tempfile.open(['test', session_extname], 
+                  TermDump::Main.class_variable_get(:@@session_dir)) do |tmp|
+      status = @main.search_session File.basename(tmp.path)
+      # with relative path in pwd
+      assert_equal true, status[:exist]
+    end
   end
 
   def test_path

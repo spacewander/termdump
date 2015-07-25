@@ -38,6 +38,8 @@ Dump your (pseudo)terminal session and replay it. You can use it to bootstrap da
 
 If you run `termdump` with a session name only, it will replay the session.
 
+*session* can be a session file(currently in yml format) in `~/.config/termdump/session`, or in the current working directory, or an absolute path to the session file.
+
 # SAVE OPTIONS
 
 --stdout

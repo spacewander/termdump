@@ -1,7 +1,7 @@
 #compdef termdump
 
 local state session_dir
-session_dir="(~/.config/termdump/session/)"
+session_dir="(. ~/.config/termdump/session/)"
 
 _arguments \
     {-i,--init}'[initialize configure interactively]' \

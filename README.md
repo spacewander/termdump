@@ -28,6 +28,7 @@ $ termdump -i
 
 ```shell
 $ termdump -s mydailywork
+Enter a new session name:
 # or `termdump -s mydailywork --exclude`
 # if you want to exclude the pty running this command
 ```
@@ -38,16 +39,56 @@ $ termdump -s mydailywork
 $ termdump mydailywork
 ```
 
+or
+
+```shell
+$ termdump
+order:  session name    ctime               atime
+[0]:        scutmall    2015-07-01 17:07:37 2015-07-25 11:59:42
+[1]:        mydailywork 2015-07-19 11:05:52 2015-07-25 11:22:03
+[2]:        termdump    2015-06-30 10:58:20 2015-07-25 11:21:46
+Select one session to load:1
+```
+
 ### edit a session
 
 ```shell
 $ termdump -e mydailywork
 ```
 
+or
+
+```shell
+$ termdump -e
+order:  session name    ctime               atime
+[0]:        scutmall    2015-07-01 17:07:37 2015-07-25 11:59:42
+[1]:        mydailywork 2015-07-19 11:05:52 2015-07-25 11:22:03
+[2]:        termdump    2015-06-30 10:58:20 2015-07-25 11:21:46
+Select one session to edit:1
+```
+
 ### delete a session
 
 ```shell
 $ termdump -d mydailywork
+```
+
+or
+
+```shell
+$ termdump -d
+order:  session name    ctime               atime
+[0]:        scutmall    2015-07-01 17:07:37 2015-07-25 11:59:42
+[1]:        mydailywork 2015-07-19 11:05:52 2015-07-25 11:22:03
+[2]:        termdump    2015-06-30 10:58:20 2015-07-25 11:21:46
+Select one session to delete:1
+```
+
+### list all session
+
+```shell
+$ termdump -l
+# equal to run `termdump`
 ```
 
 Read more in [session syntax and examples](sessions.md) and [configure](configure.md).

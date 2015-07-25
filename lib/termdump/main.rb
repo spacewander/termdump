@@ -12,6 +12,7 @@ module TermDump
     BASE_DIR = "#{Dir.home}/.config/termdump/" # only for posix file system
     @@session_dir = BASE_DIR + "session"
     @@config_file = BASE_DIR + "config.yml"
+    @@session_extname = '.yml'
 
     def initialize
       @config = read_configure 
@@ -27,7 +28,7 @@ module TermDump
 
     # initialize configure and session directory interactively
     def init
-      if Dir.exist?(BASE_DIR)
+      if Dir.exist?(@@config_file)
         return puts "The configure has been initialized yet"
       end
       dir = File.dirname(File.realpath(__FILE__)) # for ruby > 2.0.0, use __dir__
@@ -44,11 +45,11 @@ module TermDump
           print "Will create #{@@config_file} and #{@@session_dir}, go on?[Y/N] "
           answer = $stdin.gets.chomp
           return if answer == 'N' || answer == 'n'
-          FileUtils.mkpath @@session_dir
           configure = {
             'terminal' => support_term[choice]
           }
           IO.write @@config_file, YAML.dump(configure)
+          FileUtils.mkpath(@@session_dir) unless File.exist?(@@session_dir)
           puts "Ok, the configure is initialized now. Happy coding!"
           return
         end
@@ -216,12 +217,28 @@ module TermDump
       yml_tree.to_yaml
     end
 
+    # If name is an absolute path(with or without session extname), 
+    # check if the session exists;
+    # otherwises search session file first in current path and then in session_dir
+    #
     # return a Hash with two symbols:
     #   :exist => is session already existed
     #   :name => the absolute path of session
     def search_session name
-      session_name = File.join(@@session_dir, name + ".yml")
-      {:exist => File.exist?(session_name), :name => session_name}
+      if File.extname(name) != @@session_extname
+        name = name + @@session_extname
+      end
+
+      status = {:exist => File.exist?(name), :name => name}
+      if !status[:exist] && Pathname.new(name).relative?
+        session_name = File.join(Dir.pwd, name)
+        status = {:exist => File.exist?(session_name), :name => session_name}
+        unless status[:exist]
+          session_name = File.join(@@session_dir, name)
+          status = {:exist => File.exist?(session_name), :name => session_name}
+        end
+      end
+      status
     end
 
     # save yml format string to a yml file in @@session_dir
@@ -252,18 +269,22 @@ module TermDump
 
     def list list_action
       begin
-        Dir.chdir(@@session_dir)
-        sessions = Dir.glob('*.yml')
+        sessions = Dir.glob("#{@@session_dir}/*#{@@session_extname}")
+        sessions += Dir.glob("#{Dir.pwd}/*#{@@session_extname}")
         if sessions.empty?
           puts "No session exists in #{@@session_dir}"
         else
-          puts "order:\tsession name\tctime\t\tatime"
+          puts "order:\tsession name\tctime                   atime"
           sessions.sort!{|x, y| File.atime(y) <=> File.atime(x) }
           sessions.each_with_index do |f, i|
-            cdate = File.ctime(f).to_date.strftime
-            adate = File.atime(f).to_date.strftime
-            f.sub!(/\.yml$/, '')
-            puts format("[%d]: %15s\t%s\t%s", i, f, cdate, adate)
+            # equal to yy-MM-dd hh:mm:ss
+            cdate = File.ctime(f).strftime('%F %T')
+            adate = File.atime(f).strftime('%F %T')
+            is_pwd = f.start_with?(Dir.pwd)
+            # remain the path in sessions absolute
+            f = File.basename(f, @@session_extname)
+            f = "[pwd]#{f}" if is_pwd
+            printf("[%d]: %15s\t%s\t%s\n", i, f, cdate, adate)
           end
 
           get_input_order = proc do |action, &handler|
@@ -294,7 +315,7 @@ module TermDump
       status = search_session name
       return puts "#{status[:name]} not found" unless status[:exist]
       File.delete status[:name]
-      puts "Delete session '#{name}' successfully"
+      puts "Delete session '#{status[:name]}' successfully"
     end
 
     def edit_session name
@@ -305,9 +326,12 @@ module TermDump
       exec ENV['EDITOR'], status[:name]
     end
 
+    # load the process tree from yml format string, and replay it
     def load_session name
-      ptree = load_file name
-      if ptree != {}
+      status = search_session name
+      return puts "#{status[:name]} not found" unless status[:exist]
+      ptree = YAML.load(IO.read(status[:name]))
+      if ptree.is_a?(Hash) && ptree != {}
         begin
           ptree = check ptree
         rescue SessionSyntaxError => e
@@ -315,17 +339,8 @@ module TermDump
           exit 1
         end
         Session.new(@config).replay(ptree)
-      end
-    end
-
-    # load the process tree from yml format string
-    def load_file name
-      status = search_session name
-      unless status[:exist]
-        puts "#{status[:name]} not found"
-        {}
       else
-        YAML.load(IO.read(status[:name]))
+        raise SessionSyntaxError.new("yml format error")
       end
     end
 
