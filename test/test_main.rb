@@ -76,11 +76,13 @@ class TestMain < MiniTest::Test
       assert_equal true, status[:exist]
     end
 
-    Tempfile.open(['test', session_extname], 
-                  TermDump::Main.class_variable_get(:@@session_dir)) do |tmp|
-      status = @main.search_session File.basename(tmp.path)
-      # with relative path in pwd
-      assert_equal true, status[:exist]
+    session_dir = TermDump::Main.class_variable_get(:@@session_dir)
+    if Dir.exist?(session_dir)
+      Tempfile.open(['test', session_extname], session_dir) do |tmp|
+        status = @main.search_session File.basename(tmp.path)
+        # with relative path in pwd
+        assert_equal true, status[:exist]
+      end
     end
   end
 
