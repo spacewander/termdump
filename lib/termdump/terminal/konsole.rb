@@ -26,6 +26,6 @@ module TermDump
       sleep 0.5
       `xdotool getactivewindow type #{escape("#{cmd}\n")}` unless cmd.nil?
     end
-
+    # konsoe's split is not real. It just make another duplicate session.
   end
 end

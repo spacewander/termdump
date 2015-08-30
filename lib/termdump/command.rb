@@ -40,7 +40,12 @@ module TermDump
           puts VERSION
           exit 0
         end
-        opts.parse! args
+        begin
+          opts.parse! args
+        rescue OptionParser::InvalidOption
+          puts opts.help
+          exit 1
+        end
 
         # :load is the default action if no option given
         if @args.action == :load

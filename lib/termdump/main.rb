@@ -48,8 +48,9 @@ module TermDump
           configure = {
             'terminal' => support_term[choice]
           }
+          FileUtils.mkpath(BASE_DIR) unless Dir.exist?(BASE_DIR)
           IO.write @@config_file, YAML.dump(configure)
-          FileUtils.mkpath(@@session_dir) unless File.exist?(@@session_dir)
+          FileUtils.mkdir(@@session_dir) unless Dir.exist?(@@session_dir)
           puts "Ok, the configure is initialized now. Happy coding!"
           return
         end
