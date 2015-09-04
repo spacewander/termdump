@@ -6,11 +6,10 @@ module TermDump
   # See `man urxvt` and `man 7 urxvt`
   class Terminal < BasicTerminal
     def initialize config
-      @user_defined_config = config
+      super config
       # urxvt's configure is written with perl. It is too difficult to get the 
       # binding key value. So here we pass the responsibility of setting key binding 
       # to the users.
-      @config = {}
       @default_config = {
         # there is no default new_window key binding in urxvt
         'new_window' => nil,
@@ -19,7 +18,7 @@ module TermDump
     end
 
     def exec cwd, cmd
-      sleep 0.5
+      wait_for_launching
       `xdotool getactivewindow type #{escape("cd #{cwd}\n")}`
       `xdotool getactivewindow type #{escape("#{cmd}\n")}` unless cmd.nil?
     end
@@ -29,7 +28,7 @@ module TermDump
         `xdotool getactivewindow key #{configure 'new_window'}`
       else
         `xdotool getactivewindow type 'urxvt &\n'`
-        sleep 0.5
+        wait_for_launching
       end
       exec cwd, cmd
     end

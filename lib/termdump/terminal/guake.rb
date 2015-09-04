@@ -5,7 +5,7 @@ module TermDump
   # See `man guake`
   class Terminal < BasicTerminal
     def initialize config
-      @user_defined_config = config
+      super config
       @keybindings = '/apps/guake/keybindings/local'
       @config = {
         'new_tab' => get_configure_key('new_tab')

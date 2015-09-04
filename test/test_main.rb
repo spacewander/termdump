@@ -53,11 +53,14 @@ class TestMain < MiniTest::Test
   def test_search_session_with_or_without_extname
     name = "test"
     status = @main.search_session name
-    assert_equal false, status[:exist]
-
     session_dir = TermDump::Main.class_variable_get :@@session_dir
     session_extname = TermDump::Main.class_variable_get :@@session_extname
     assert_equal File.join(session_dir, name + session_extname), status[:name]
+    if File.exist?(status[:name])
+      assert_equal true, status[:exist]
+    else
+      assert_equal false, status[:exist]
+    end
 
     # with or without extname is ok
     name += session_extname

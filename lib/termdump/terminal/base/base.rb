@@ -4,10 +4,13 @@ module TermDump
   class BasicTerminal
     include TerminalHelper
 
+    attr_writer :delay
     def initialize config
       @user_defined_config = config
       @config = {}
       @default_config = {}
+
+      @delay = 0.5 # delay for 0.5 second
     end
 
     # Get user defined value/configure value/default value with a configure item.
@@ -18,6 +21,11 @@ module TermDump
           @default_config.fetch(default_key)
         }
       }
+    end
+
+    # wait until shell/terminal launched, so that we can do something in them
+    def wait_for_launching
+      sleep @delay
     end
 
     # run command in current window

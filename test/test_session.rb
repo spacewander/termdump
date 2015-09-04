@@ -4,7 +4,7 @@ require 'termdump/session'
 
 class TestSession < MiniTest::Test
   def setup
-    @session = TermDump::Session.new
+    @session = TermDump::Session.new({'terminal' => 'base/mock'})
   end
 
   def inject_node_queue actions
@@ -107,6 +107,7 @@ class TestSession < MiniTest::Test
       [:tab, 'tab', 'some', 'rm -rf /'],
       [:vsplit, 'vsplit', 'any', 'ls'],
       [:hsplit, 'hsplit', 'else']
-    ]
+    ].flatten!
+    assert_equal expected, done_actions
   end
 end

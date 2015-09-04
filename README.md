@@ -97,7 +97,7 @@ Read more in [session syntax and examples](sessions.md) and [configure](configur
 
 - [x] gnome-terminal
 - [x] guake
-- [ ] konsole
+- [x] konsole
 - [x] terminator
 - [x] tilda
 - [x] urxvt

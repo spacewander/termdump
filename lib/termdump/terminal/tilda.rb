@@ -5,7 +5,7 @@ module TermDump
   # See `man tilda` and <https://github.com/lanoxx/tilda>
   class Terminal < BasicTerminal
     def initialize config
-      @user_defined_config = config
+      super config
 
       # FIXME Could not detect the order of current tilda window, 
       # so guess it to be the first one
@@ -16,8 +16,6 @@ module TermDump
       if File.exist?(configure)
         lines = IO.readlines(configure)
         @config = parse_configure lines
-      else
-        @config = {}
       end
 
       @default_config = {
@@ -62,7 +60,7 @@ module TermDump
     end
 
     def exec cwd, cmd
-      sleep 0.5
+      wait_for_launching
       `xdotool getactivewindow type #{escape("cd #{cwd}\n")}`
       `xdotool getactivewindow type #{escape("#{cmd}\n")}` unless cmd.nil?
     end

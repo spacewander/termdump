@@ -5,10 +5,11 @@ module TermDump
   # See `man xterm`
   class Terminal < BasicTerminal
     def initialize config
+      super config
     end
 
     def exec cwd, cmd
-      sleep 0.5
+      wait_for_launching
       `xdotool getactivewindow type #{escape("cd #{cwd}\n")}`
       `xdotool getactivewindow type #{escape("#{cmd}\n")}` unless cmd.nil?
     end

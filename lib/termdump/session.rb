@@ -9,23 +9,28 @@ module TermDump
     # * new_vsplit: The key sequence used to open a new vsplit
     # * new_hsplit: The key sequence used to open a new hsplit
     def initialize config={}
-      if config.has_key?('terminal')
-        begin
-          terminal = config['terminal']
-          require_relative "terminal/#{terminal}"
-        rescue LoadError
-          puts "Load with terminal #{terminal} error:"
-          puts "Not support #{terminal} yet!"
-          exit 0
-        end
-      else
-        require_relative "terminal/base/default"
+      if config.nil? || !config.has_key?('terminal')
+        raise ArgumentError.new(
+          "You need to set 'terminal' in the configure file")
       end
+      begin
+        terminal = config['terminal']
+        require_relative "terminal/#{terminal}"
+      rescue LoadError
+        puts "Load with terminal #{terminal} error:"
+        puts "Not support #{terminal} yet!"
+        exit 0
+      end
+
       @terminal = Terminal.new(config)
       @node_queue = []
       @support_split = Terminal.public_method_defined?(:vsplit) && 
         Terminal.public_method_defined?(:hsplit)
       @support_tab = Terminal.public_method_defined?(:tab)
+
+      if config.has_key?('delay') && config['delay'] == config['delay'].to_i
+        @terminal.delay = config['delay']
+      end
     end
 
     def replay task

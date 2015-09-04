@@ -4,7 +4,7 @@ module TermDump
   # This Terminal class is for [gnome-terminal](https://wiki.gnome.org/Apps/Terminal)
   class Terminal < BasicTerminal
     def initialize config
-      @user_defined_config = config
+      super config
       @keybindings = '/apps/gnome-terminal/keybindings'
       @config = {
         'new_window' => get_configure_key('new_window'),
@@ -24,7 +24,7 @@ module TermDump
     end
 
     def exec cwd, cmd
-      sleep 0.5
+      wait_for_launching
       `xdotool getactivewindow type #{escape("cd #{cwd}\n")}`
       `xdotool getactivewindow type #{escape("#{cmd}\n")}` unless cmd.nil?
     end

@@ -5,7 +5,7 @@ module TermDump
   # See `man terminator` and `man termintor_config`
   class Terminal < BasicTerminal
     def initialize config
-      @user_defined_config = config
+      super config
       # the config file will be ~/.config/terminator/config, 
       # but it may be overridden with $XDG_CONFIG_HOME 
       # (in which case it will be $XDG_CONFIG_HOME/terminator/config)
@@ -17,8 +17,6 @@ module TermDump
       if File.exist?(configure)
         lines = IO.readlines(configure)
         @config = parse_configure lines
-      else
-        @config = {}
       end
       @default_config = {
         'new_window' => 'ctrl+shift+i',
@@ -70,7 +68,7 @@ module TermDump
     end
 
     def exec cwd, cmd
-      sleep 0.5
+      wait_for_launching
       `xdotool getactivewindow type #{escape("cd #{cwd}\n")}`
       `xdotool getactivewindow type #{escape("#{cmd}\n")}` unless cmd.nil?
     end
